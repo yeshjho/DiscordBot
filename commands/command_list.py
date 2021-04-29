@@ -10,7 +10,7 @@ commands = []
 
 EXCLUDES = ['command_list.py']
 for command_file in glob('commands/*.py'):
-    command_file = command_file.split('\\')[1]
+    command_file = command_file.split('\\')[1].split('/')[1]
     if command_file.startswith('command_') and command_file not in EXCLUDES:
         file_name = command_file.split('.')[0]
         module = import_module('commands.' + file_name)

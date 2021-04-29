@@ -1,6 +1,17 @@
-from abc import *
+from abc import ABCMeta, abstractmethod
 from asyncmock import AsyncMock
+from enum import Enum
+
 from discord import Message
+
+from permissions import *
+
+
+class EExecuteResult(Enum):
+    SUCCESS = 0
+    NO_PERMISSION = 1
+    SYNTAX_ERROR = 2
+    CUSTOM_ERROR = 3
 
 
 class Command(metaclass=ABCMeta):
@@ -11,23 +22,30 @@ class Command(metaclass=ABCMeta):
     def get_command_str(self) -> str:
         pass
 
+    def get_command_permission_level(self) -> int:
+        return EPermissionLevel.ALL
+
     @abstractmethod
-    async def execute(self, msg: Message, command_str: str, arguments: list):
+    async def execute(self, msg: Message, arguments: list, *args, **kwargs):
         pass
+
+    async def on_custom_error(self, msg: Message, arguments: list):
+        await msg.channel.send(' '.join(arguments))
 
 
 def execute_condition_checker():
     def wrapper(func):
-        def _wrapper(self, msg: Message, command_str: str, arguments: list):
+        async def _wrapper(self, msg: Message, arguments: list, *args, **kwargs):
             to_return = AsyncMock()
-            to_return.x.return_value = True
 
-            if self.get_command_str() != command_str:
-                to_return.x.return_value = False
-                return to_return.x()
+            if self.get_command_permission_level() > get_permission_level(msg.author):
+                to_return.x.return_value = EExecuteResult.NO_PERMISSION
+                return await to_return.x()
 
-            # 권한 체크
+            to_return.x.return_value = await func(self, msg, arguments, *args, **kwargs)
+            if to_return.x.return_value is None:
+                to_return.x.return_value = EExecuteResult.SUCCESS
 
-            return func(self, msg, command_str, arguments)
+            return await to_return.x()
         return _wrapper
     return wrapper

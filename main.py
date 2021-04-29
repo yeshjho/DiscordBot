@@ -1,20 +1,19 @@
 import discord
-from discord import Embed
-from discord.channel import DMChannel
+from discord import Game
 import asyncio
-from time import sleep
 
+from commands.command_list import *
 from constants import *
 from helper_functions import *
-from command_list import *
 
 
 class BuildBot(discord.Client):
     def __init__(self):
-        super().__init__()
+        super().__init__(activity=Game(name="`help"))
 
-        self.count = 1
-        self.toSend = ""
+    @staticmethod
+    async def on_ready():
+        print("Ready!")
 
     async def on_message(self, msg: discord.Message):
         if msg.author == self.user:
@@ -22,10 +21,11 @@ class BuildBot(discord.Client):
 
         if msg.content.startswith(COMMAND_PREFIX):
             split_content = msg.content.split(' ')
-            await execute_command(msg, split_content[0][len(COMMAND_PREFIX):], split_content[1:])
+            await execute_command(msg, split_content[0][len(COMMAND_PREFIX):], split_content[1:], main_global=globals())
 
 
 if __name__ == "__main__":
+
     build_bot = BuildBot()
     loop = asyncio.get_event_loop()
     try:

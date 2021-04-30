@@ -3,6 +3,7 @@ from commands.command import *
 from traceback import format_exc
 
 from constants import *
+from helper_functions import *
 
 
 class CommandEval(Command):
@@ -23,12 +24,8 @@ class CommandEval(Command):
     @execute_condition_checker()
     async def execute(self, msg: Message, arguments: list, *args, **kwargs):
         try:
-            result = eval(' '.join(arguments), kwargs['main_global'])
+            result = eval(' '.join(arguments), kwargs['main_global'], locals())
         except:
             result = format_exc()
 
-        if result is not None:
-            result = repr(result)
-            frag_size = TEXT_LENGTH_LIMIT - 8
-            for result_split in [result[i:i + frag_size] for i in range(0, len(result), frag_size)]:
-                await msg.channel.send('```\n' + result_split + '\n```')
+        await send_split(msg.channel, str(result), "```\n", "\n```")

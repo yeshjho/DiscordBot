@@ -1,8 +1,6 @@
-import discord.errors
-
 from commands.command import *
 
-from discord import errors
+import discord.errors
 
 from helper_functions import *
 
@@ -28,6 +26,15 @@ class CommandConvertToReactions(Command):
                                 'vs': ['🆚'], 'cool': ['🆒'], 'new': ['🆕'], 'free': ['🆓'], 'abc': ['🔤']}
         self.skip_letters = [' ']
 
+        extra_emoji_num = 3
+        extra_vowel_num = 2
+        for i in range(1, extra_emoji_num + 1):
+            for c in "abcdefghijklmnopqrstuvwxyz":
+                self.letter_icon_map[c].insert(0, "#" + c + "_" * i)
+        for i in range(extra_emoji_num + 1, extra_emoji_num + extra_vowel_num + 1):
+            for c in "aeiou":
+                self.letter_icon_map[c].insert(0, "#" + c + "_" * i)
+
     def get_command_str(self) -> str:
         return "react"
 
@@ -35,12 +42,12 @@ class CommandConvertToReactions(Command):
     async def execute(self, msg: Message, arguments: list, *args, **kwargs):
         if not msg.reference:
             await msg.delete()
-            return EExecuteResult.SYNTAX_ERROR
+            return ECommandExecuteResult.SYNTAX_ERROR
 
         original_msg = await msg.channel.fetch_message(msg.reference.message_id)
         if not original_msg:
             await msg.delete()
-            return EExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 원본 메시지가 없어졌어요!"
+            return ECommandExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 원본 메시지가 없어졌어요!"
 
         await msg.delete()
 
@@ -60,10 +67,13 @@ class CommandConvertToReactions(Command):
                 current_to_find = ''
 
         if current_to_find != '':
-            return EExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 이모지가 부족해요!"
+            return ECommandExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 이모지가 부족해요!"
         else:
             try:
                 for icon_name in icon_name_list:
-                    await original_msg.add_reaction(icon_name)
+                    emoji = icon_name
+                    if emoji.startswith('#'):
+                        emoji = discord.utils.get(kwargs['bot'].emojis, name=emoji[1:])
+                    await original_msg.add_reaction(emoji)
             except discord.errors.Forbidden:
                 pass

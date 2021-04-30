@@ -7,7 +7,7 @@ from discord import Message
 from permissions import *
 
 
-class EExecuteResult(Enum):
+class ECommandExecuteResult(Enum):
     SUCCESS = 0
     NO_PERMISSION = 1
     SYNTAX_ERROR = 2
@@ -39,12 +39,12 @@ def execute_condition_checker():
             to_return = AsyncMock()
 
             if self.get_command_permission_level() > get_permission_level(msg.author):
-                to_return.x.return_value = EExecuteResult.NO_PERMISSION
+                to_return.x.return_value = ECommandExecuteResult.NO_PERMISSION
                 return await to_return.x()
 
             to_return.x.return_value = await func(self, msg, arguments, *args, **kwargs)
             if to_return.x.return_value is None:
-                to_return.x.return_value = EExecuteResult.SUCCESS
+                to_return.x.return_value = ECommandExecuteResult.SUCCESS
 
             return await to_return.x()
         return _wrapper

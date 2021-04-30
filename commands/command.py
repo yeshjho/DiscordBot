@@ -38,7 +38,7 @@ def execute_condition_checker():
         async def _wrapper(self, msg: Message, arguments: list, *args, **kwargs):
             to_return = AsyncMock()
 
-            if self.get_command_permission_level() > get_permission_level(msg.author):
+            if self.get_command_permission_level() > permissions.get_permission_level(msg.author):
                 to_return.x.return_value = ECommandExecuteResult.NO_PERMISSION
                 return await to_return.x()
 

@@ -32,10 +32,10 @@ class DiscordBot(discord.Client):
 
     @dispatch_action()
     async def on_message(self, msg: discord.Message):
-        if msg.author == self.user:
+        if msg.author.bot:
             return
 
-        if msg.content.startswith(COMMAND_PREFIX):
+        if msg.content.startswith(COMMAND_PREFIX) and msg.content.count(COMMAND_PREFIX) == 1:
             split_content = msg.content.split(' ')
             await execute_command(msg, split_content[0][len(COMMAND_PREFIX):], split_content[1:],
                                   main_global=globals(), bot=self)

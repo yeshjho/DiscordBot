@@ -24,7 +24,7 @@ class ActionHangmanGuess(Action):
 
         guess_result = game.guess(c)
         if guess_result == EGuessResult.ALREADY_USED:
-            await msg.channel.send(mention_user(msg.author) + " 이미 사용된 글자입니다!")
+            await msg.channel.send(mention_user(msg.author) + " 이미 사용된 글자입니다!", delete_after=1)
         else:
             try:
                 game_msg = await msg.channel.fetch_message(msg_id)
@@ -37,11 +37,13 @@ class ActionHangmanGuess(Action):
                 hangman_command.update_session(author_id, [msg_id, game])
 
             elif guess_result == EGuessResult.LOSE:
-                await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!".format(mention_user(msg.author), game.word))
+                await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}".format(
+                    mention_user(msg.author), game.word,
+                    'https://en.dict.naver.com/#/search?query={}'.format(game.word)))
                 hangman_command.finish_game(author_id, False)
 
             elif guess_result == EGuessResult.WIN:
-                await msg.channel.send(mention_user(msg.author) + " 축하드립니다! 정답을 맞추셨습니다!")
+                await msg.channel.send(mention_user(msg.author) + " 축하드립니다! 정답을 맞히셨습니다!")
                 hangman_command.finish_game(author_id, True)
 
             else:

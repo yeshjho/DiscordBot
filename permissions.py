@@ -4,7 +4,7 @@ from sys import maxsize
 
 from discord import Member, User, Guild, Role
 
-from constants import *
+from helper_functions import *
 
 
 class EPermissionLevel:
@@ -20,11 +20,8 @@ class Permissions:
     def __init__(self):
         self.permission_file_name = "permissions.pickle"
 
-        self.permissions = {'user': {OWNER_ID: EPermissionLevel.OWNER}, 'role': {}, 'guild': {}}
-
-        if isfile(self.permission_file_name):
-            with open(self.permission_file_name, "rb") as permission_file:
-                self.permissions = pickle.load(permission_file)
+        self.permissions = load_data(self.permission_file_name,
+                                     {'user': {OWNER_ID: EPermissionLevel.OWNER}, 'role': {}, 'guild': {}})
 
     def get_permission_level(self, target: Member or User or Guild or Role or int or str, id_: int = 0) -> int:
         type_ = type(target)
@@ -64,8 +61,7 @@ class Permissions:
         else:
             raise
 
-        with open(self.permission_file_name, 'wb') as permission_file:
-            pickle.dump(self.permissions, permission_file)
+        save_data(self.permission_file_name, self.permissions)
 
 
 permissions = Permissions()

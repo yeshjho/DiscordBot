@@ -17,7 +17,7 @@ def dispatch_action():
         async def _wrapper(self, *args, **kwargs):
             await func(self, *args, **kwargs)
             await execute_action(func.__qualname__.split('.')[1], *args, **kwargs,
-                                 main_global=globals(), bot=self)
+                                 main_global=globals(), bot=self, commands_map=commands_map, actions=actions)
         return _wrapper
     return wrapper
 
@@ -38,7 +38,7 @@ class DiscordBot(discord.Client):
         if msg.content.startswith(COMMAND_PREFIX) and msg.content.count(COMMAND_PREFIX) == 1:
             split_content = msg.content.split(' ')
             await execute_command(msg, split_content[0][len(COMMAND_PREFIX):], split_content[1:],
-                                  main_global=globals(), bot=self)
+                                  main_global=globals(), bot=self, commands_map=commands_map, actions=actions)
             return
 
     @dispatch_action()

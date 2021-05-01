@@ -1,5 +1,8 @@
 from discord import Member, Embed
 
+from os.path import isfile
+import pickle
+
 from constants import *
 
 
@@ -35,3 +38,16 @@ async def send_split(channel, msg: str, prefix: str = '', suffix: str = ''):
 
 def is_method_overriden(parent_class, child_object, method_name: str) -> bool:
     return parent_class.__dict__[method_name].__code__ is not child_object.__getattribute__(method_name).__code__
+
+
+def load_data(file_name: str, default_value=None):
+    if isfile(file_name):
+        with open(file_name, "rb") as file:
+            return pickle.load(file)
+    else:
+        return default_value
+
+
+def save_data(file_name: str, obj):
+    with open(file_name, "wb") as file:
+        pickle.dump(obj, file)

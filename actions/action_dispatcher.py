@@ -7,12 +7,12 @@ from helper_functions import *
 
 actions = []
 
-EXCLUDES = ['action_dispatcher.py']
-for action_file in glob('actions/*.py'):
-    action_file = action_file.split('\\')[1] if '\\' in action_file else action_file.split('/')[1]
-    if action_file.startswith('action_') and action_file not in EXCLUDES:
-        file_name = action_file.split('.')[0]
-        module = import_module('actions.' + file_name)
+EXCLUDES = ['action_dispatcher']
+for action_file in glob('actions/**/*.py', recursive=True):
+    module_name = ''.join(action_file.split('.')[:-1]).replace('\\', '.').replace('/', '.')
+    file_name = module_name.split('.')[-1]
+    if file_name.startswith('action_') and file_name not in EXCLUDES:
+        module = import_module(module_name)
         class_name = ''.join([c[0].upper() + c[1:] for c in file_name.split('_')])
         actions.append(module.__dict__[class_name]())
 
@@ -22,9 +22,6 @@ async def execute_action(method_name: str, *args, **kwargs):
         if not is_method_overriden(Action, action, method_name):
             continue
 
-        execute_result = await action.__getattribute__(method_name)(*args, **kwargs, actions=actions)
+        execute_result = await action.__getattribute__(method_name)(*args, **kwargs)
         if execute_result is None:
             execute_result = EActionExecuteResult.SUCCESS
-
-        if execute_result == EActionExecuteResult.SUCCESS:
-            break

@@ -24,7 +24,7 @@ def dispatch_action():
 
 class DiscordBot(discord.Client):
     def __init__(self):
-        super().__init__(activity=Game(name="`help" if not IS_TESTING else "테스트 중"))
+        super().__init__(activity=Game(name="`help" if not IS_TESTING else "테스트"))
 
     @staticmethod
     async def on_ready():

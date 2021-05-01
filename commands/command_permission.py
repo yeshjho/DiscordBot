@@ -43,6 +43,9 @@ class CommandPermission(Command):
             elif mode == 'set':
                 if len_ < 4:
                     return ECommandExecuteResult.SYNTAX_ERROR
+                
+                if IS_TESTING:
+                    await msg.channel.send("테스트 중이라 새 권한 정보는 유실될 거예요!")
 
                 level = int(arguments[3])
 

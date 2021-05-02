@@ -1,8 +1,6 @@
-import pickle
-from os.path import isfile
 from sys import maxsize
 
-from discord import Member, User, Guild, Role
+from discord import User, Guild, Role
 
 from helper_functions import *
 
@@ -52,15 +50,7 @@ class Permissions:
             (min_level if min_level < EPermissionLevel.ALL else max_level)
 
     def set_permission_level(self, target: str, id_: int, level: int):
-        if target == 'user':
-            self.permissions['user'][id_] = level
-        elif target == 'guild':
-            self.permissions['guild'][id_] = level
-        elif target == 'role':
-            self.permissions['role'][id_] = level
-        else:
-            raise
-
+        self.permissions[target][id_] = level
         save_data(self.permission_file_name, self.permissions)
 
 

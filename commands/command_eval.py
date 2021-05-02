@@ -2,7 +2,6 @@ from commands.command import *
 
 from traceback import format_exc
 
-from constants import *
 from helper_functions import *
 
 

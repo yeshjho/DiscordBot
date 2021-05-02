@@ -2,7 +2,6 @@ from importlib import import_module
 from glob import glob
 
 from actions.action import Action, EActionExecuteResult
-from constants import *
 from helper_functions import *
 
 actions = []

@@ -1,7 +1,5 @@
 from commands.command import *
 
-import discord
-
 from helper_functions import *
 
 

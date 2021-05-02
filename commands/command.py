@@ -1,4 +1,5 @@
 from abc import ABCMeta, abstractmethod
+import argparse
 from asyncmock import AsyncMock
 from enum import Enum
 
@@ -25,8 +26,11 @@ class Command(metaclass=ABCMeta):
     def get_command_permission_level(self) -> int:
         return EPermissionLevel.ALL
 
+    def fill_arg_parser(self, parser: argparse.ArgumentParser):
+        pass
+
     @abstractmethod
-    async def execute(self, msg: Message, arguments: list, *args, **kwargs):
+    async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         pass
 
     async def on_custom_error(self, msg: Message, arguments: list):

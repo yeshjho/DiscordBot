@@ -39,8 +39,11 @@ class CommandConvertToReactions(Command):
     def get_command_str(self) -> str:
         return "react"
 
+    def fill_arg_parser(self, parser: argparse.ArgumentParser):
+        parser.add_argument('letters', nargs='*')
+
     @execute_condition_checker()
-    async def execute(self, msg: Message, arguments: list, *args, **kwargs):
+    async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         if not msg.reference:
             await msg.delete()
             return ECommandExecuteResult.SYNTAX_ERROR
@@ -52,7 +55,7 @@ class CommandConvertToReactions(Command):
 
         await msg.delete()
 
-        s = ''.join(arguments).lower()
+        s = ''.join(args.letters).lower()
         letter_icon_map_copy = self.letter_icon_map.copy()
         icon_name_list = []
 

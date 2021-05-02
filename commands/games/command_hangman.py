@@ -135,14 +135,14 @@ class CommandHangman(Command):
     def get_command_str(self) -> str:
         return "hangman"
 
+    def fill_arg_parser(self, parser: argparse.ArgumentParser):
+        parser.add_argument('stat', nargs='?', choices=['stat'], default=None)
+
     @execute_condition_checker()
-    async def execute(self, msg: Message, arguments: list, *args, **kwargs):
+    async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         author_id = msg.author.id
 
-        if len(arguments) == 1:
-            if arguments[0] != 'stat':
-                return ECommandExecuteResult.SYNTAX_ERROR
-
+        if args.stat:
             win_count, lose_count = self.stats.get(author_id, [0, 0])
             await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {}%)".format(
                 mention_user(msg.author), win_count, lose_count,

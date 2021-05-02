@@ -1,3 +1,4 @@
+import argparse
 from importlib import import_module
 from glob import glob
 
@@ -20,12 +21,27 @@ for command_file in glob('commands/**/*.py', recursive=True):
 commands_map = dict([(command.get_command_str(), command) for command in commands])
 
 
-async def execute_command(msg: Message, command_str: str, arguments: list, *args, **kwargs):
+class NonExitingArgumentParser(argparse.ArgumentParser):
+    def error(self, message):
+        raise argparse.ArgumentError(None, "")
+
+
+async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     if IS_TESTING and msg.author.id != OWNER_ID:
         return
 
     if command_str in commands_map:
-        return_value = await commands_map[command_str].execute(msg, arguments, *args, **kwargs)
+        command = commands_map[command_str]
+
+        parser = NonExitingArgumentParser(add_help=False)
+        command.fill_arg_parser(parser)
+        try:
+            args_namespace, _ = parser.parse_known_args(args)
+        except argparse.ArgumentError:
+            return_value = ECommandExecuteResult.SYNTAX_ERROR
+        else:
+            return_value = await command.execute(msg, args_namespace, **kwargs)
+
         additional_args = []
         if type(return_value) is tuple:
             additional_args = return_value[1:]
@@ -33,12 +49,18 @@ async def execute_command(msg: Message, command_str: str, arguments: list, *args
 
         if return_value == ECommandExecuteResult.SUCCESS:
             return
+
         elif return_value == ECommandExecuteResult.NO_PERMISSION:
             await msg.channel.send(mention_user(msg.author) + " 이 명령어를 실행할 권한이 없습니다!")
+
         elif return_value == ECommandExecuteResult.SYNTAX_ERROR:
-            await commands_map['help'].execute(msg, [command_str], *args, **kwargs)
+            fake_namespace = argparse.Namespace()
+            fake_namespace.__setattr__('command', command_str)
+            await commands_map['help'].execute(msg, fake_namespace, **kwargs)
+
         elif return_value == ECommandExecuteResult.CUSTOM_ERROR:
-            await commands_map[command_str].on_custom_error(msg, additional_args)
+            await command.on_custom_error(msg, additional_args)
+
         else:
             raise
 

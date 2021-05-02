@@ -16,5 +16,5 @@ class CommandVersion(Command):
         return "version"
 
     @execute_condition_checker()
-    async def execute(self, msg: Message, arguments: list, *args, **kwargs):
+    async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         await msg.channel.send(VERSION)

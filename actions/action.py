@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class EActionExecuteResult(Enum):
+class EActionExecuteResult:
     NO_MATCH = -1
     SUCCESS = 0
     NO_PERMISSION = 1

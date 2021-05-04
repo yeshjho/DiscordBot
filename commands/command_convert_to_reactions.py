@@ -39,6 +39,9 @@ class CommandConvertToReactions(Command):
     def get_command_str(self) -> str:
         return "react"
 
+    def get_command_alias(self) -> list:
+        return ["re", "반응"]
+
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
         parser.add_argument('letters', nargs='*')
 

@@ -1,14 +1,13 @@
 from abc import ABCMeta, abstractmethod
 import argparse
 from asyncmock import AsyncMock
-from enum import Enum
 
 from discord import Message
 
 from permissions import *
 
 
-class ECommandExecuteResult(Enum):
+class ECommandExecuteResult:
     SUCCESS = 0
     NO_PERMISSION = 1
     SYNTAX_ERROR = 2
@@ -22,6 +21,9 @@ class Command(metaclass=ABCMeta):
     @abstractmethod
     def get_command_str(self) -> str:
         pass
+
+    def get_command_alias(self) -> list:
+        return []
 
     def get_command_permission_level(self) -> int:
         return EPermissionLevel.ALL

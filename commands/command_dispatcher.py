@@ -19,6 +19,10 @@ for command_file in glob('commands/**/*.py', recursive=True):
         commands.append(module.__dict__[class_name]())
 
 commands_map = dict([(command.get_command_str(), command) for command in commands])
+alias_map = {}
+for command in commands:
+    for alias in command.get_command_alias():
+        alias_map[alias] = command.get_command_str()
 
 
 class NonExitingArgumentParser(argparse.ArgumentParser):
@@ -30,6 +34,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     if IS_TESTING and msg.author.id != OWNER_ID:
         return
 
+    command_str = alias_map.get(command_str, command_str)
     if command_str in commands_map:
         command = commands_map[command_str]
 

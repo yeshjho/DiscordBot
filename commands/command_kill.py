@@ -13,6 +13,9 @@ class CommandKill(Command):
     def get_command_str(self) -> str:
         return "kill"
 
+    def get_command_alias(self) -> list:
+        return ["종료", "꺼져", "죽어"]
+
     def get_command_permission_level(self) -> int:
         return EPermissionLevel.ADMIN
 

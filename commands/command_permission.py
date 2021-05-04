@@ -17,6 +17,9 @@ class CommandPermission(Command):
     def get_command_str(self) -> str:
         return "permission"
 
+    def get_command_alias(self) -> list:
+        return ["per", "권한"]
+
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
         subparsers = parser.add_subparsers(dest='mode')
 

@@ -15,6 +15,9 @@ class CommandVersion(Command):
     def get_command_str(self) -> str:
         return "version"
 
+    def get_command_alias(self) -> list:
+        return ["v", "ver", "버전"]
+
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         await msg.channel.send(VERSION)

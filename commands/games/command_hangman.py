@@ -1,11 +1,11 @@
-import discord.errors
-
 from commands.command import *
 
 from random import choice
 
+import discord.errors
 
-class EGuessResult(Enum):
+
+class EGuessResult:
     ALREADY_USED = 0
     WIN = 1
     LOSE = 2
@@ -124,7 +124,7 @@ class CommandHangman(Command):
         self.stat_file_name = "database/hangman_stats.pickle"
         self.session_file_name = "database/hangman_sessions.pickle"
 
-        with open('database/words.txt') as word_file:
+        with open('database/hangman_words.txt') as word_file:
             self.words = [word.strip() for word in word_file.readlines()]
 
         self.sessions = load_data(self.session_file_name, {})  # user id : [msg id, game]
@@ -134,6 +134,9 @@ class CommandHangman(Command):
 
     def get_command_str(self) -> str:
         return "hangman"
+
+    def get_command_alias(self) -> list:
+        return ['hang', '행맨']
 
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
         parser.add_argument('stat', nargs='?', choices=['stat'], default=None)

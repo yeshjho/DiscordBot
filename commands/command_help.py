@@ -15,6 +15,9 @@ class CommandHelp(Command):
     def get_command_str(self) -> str:
         return "help"
 
+    def get_command_alias(self) -> list:
+        return ["h", "도움", "도움말", "명령어"]
+
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
         parser.add_argument('command', nargs='?', default=None)
 

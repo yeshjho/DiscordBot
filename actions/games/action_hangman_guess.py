@@ -33,17 +33,19 @@ class ActionHangmanGuess(Action):
             else:
                 await game_msg.edit(content=game.get_msg())
 
+            dict_link = 'https://en.dict.naver.com/#/search?query={}'.format(game.word)
+
             if guess_result == EGuessResult.NORMAL:
                 hangman_command.update_session(author_id, [msg_id, game])
 
             elif guess_result == EGuessResult.LOSE:
                 await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}".format(
-                    mention_user(msg.author), game.word,
-                    'https://en.dict.naver.com/#/search?query={}'.format(game.word)))
+                    mention_user(msg.author), game.word, dict_link))
                 hangman_command.finish_game(author_id, False)
 
             elif guess_result == EGuessResult.WIN:
-                await msg.channel.send(mention_user(msg.author) + " 축하드립니다! 정답을 맞히셨습니다!")
+                await msg.channel.send("{} 축하드립니다! 정답을 맞히셨습니다!\n{}".format(
+                    mention_user(msg.author), dict_link))
                 hangman_command.finish_game(author_id, True)
 
             else:

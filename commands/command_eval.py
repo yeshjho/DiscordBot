@@ -17,6 +17,9 @@ class CommandEval(Command):
     def get_command_str(self) -> str:
         return "eval"
 
+    def get_command_alias(self) -> list:
+        return ['실행']
+
     def get_command_permission_level(self) -> int:
         return EPermissionLevel.OWNER
 

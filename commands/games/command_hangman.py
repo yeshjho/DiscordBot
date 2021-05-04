@@ -139,7 +139,7 @@ class CommandHangman(Command):
         return ['hang', '행맨']
 
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
-        parser.add_argument('stat', nargs='?', choices=['stat'], default=None)
+        parser.add_argument('stat', nargs='?', choices=['stat', 's', '전적', '스탯'], default=None)
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):

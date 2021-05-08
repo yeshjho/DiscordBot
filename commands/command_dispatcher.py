@@ -4,8 +4,9 @@ from glob import glob
 
 from discord import Message
 
-from commands.command import ECommandExecuteResult
+from commands.command import ECommandExecuteResult, CommandExecuteError
 from helper_functions import *
+from logger import log_command
 
 commands = []
 
@@ -40,20 +41,25 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
 
         parser = NonExitingArgumentParser(add_help=False)
         command.fill_arg_parser(parser)
+
+        additional_args = []
         try:
             args_namespace, _ = parser.parse_known_args(args)
         except argparse.ArgumentError:
             return_value = ECommandExecuteResult.SYNTAX_ERROR
         else:
-            return_value = await command.execute(msg, args_namespace, **kwargs)
+            try:
+                return_value = await command.execute(msg, args_namespace, **kwargs)
+            except CommandExecuteError as err:
+                return_value = ECommandExecuteResult.CUSTOM_ERROR
+                additional_args = err.args
 
-        additional_args = []
         if type(return_value) is tuple:
             additional_args = return_value[1:]
             return_value = return_value[0]
 
         if return_value == ECommandExecuteResult.SUCCESS:
-            return
+            pass
 
         elif return_value == ECommandExecuteResult.NO_PERMISSION:
             await msg.channel.send(mention_user(msg.author) + " 이 명령어를 실행할 권한이 없습니다!")
@@ -68,6 +74,8 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
 
         else:
             raise
+
+        log_command(command_str, msg, return_value, additional_args)
 
     else:
         await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")

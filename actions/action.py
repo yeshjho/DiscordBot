@@ -1,7 +1,4 @@
-class EActionExecuteResult:
-    NO_MATCH = -1
-    SUCCESS = 0
-    NO_PERMISSION = 1
+from common import EActionExecuteResult
 
 
 class Action:

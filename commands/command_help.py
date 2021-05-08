@@ -38,7 +38,7 @@ class CommandHelp(Command):
         commands_map = kwargs['commands_map']
         if args.command:
             if args.command not in commands_map:
-                return ECommandExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 존재하지 않는 명령어입니다!"
+                raise CommandExecuteError(mention_user(msg.author), "존재하지 않는 명령어입니다!")
 
             target_command = commands_map[args.command]
             doc = target_command.__doc__

@@ -5,6 +5,7 @@ from discord import Message
 
 from commands.games.command_hangman import CommandHangman, EGuessResult
 from helper_functions import *
+from logger import Logger
 
 
 class ActionHangmanGuess(Action):
@@ -37,16 +38,19 @@ class ActionHangmanGuess(Action):
 
             if guess_result == EGuessResult.NORMAL:
                 hangman_command.update_session(author_id, [msg_id, game])
+                Logger.log("Hangman:", author_id, "guessed letter", c)
 
             elif guess_result == EGuessResult.LOSE:
                 await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}".format(
                     mention_user(msg.author), game.word, dict_link))
                 hangman_command.finish_game(author_id, False)
+                Logger.log("Hangman:", author_id, "lost")
 
             elif guess_result == EGuessResult.WIN:
                 await msg.channel.send("{} 축하드립니다! 정답을 맞히셨습니다!\n{}".format(
                     mention_user(msg.author), dict_link))
                 hangman_command.finish_game(author_id, True)
+                Logger.log("Hangman:", author_id, "won")
 
             else:
                 raise

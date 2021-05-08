@@ -19,7 +19,7 @@ class HangmanGame:
         self.word = word
         self.used_characters = ''
 
-    def guess(self, c: str) -> EGuessResult:
+    def guess(self, c: str) -> int:
         if c in self.used_characters:
             return EGuessResult.ALREADY_USED
 
@@ -170,6 +170,8 @@ class CommandHangman(Command):
             self.sessions[author_id][0] = (await msg.channel.send(self.sessions[author_id][1].get_msg())).id
 
             save_data(self.session_file_name, self.sessions)
+
+            return ECommandExecuteResult.SUCCESS, "word =", word
 
     def get_session(self, user_id: int):
         return self.sessions.get(user_id, [None, None])

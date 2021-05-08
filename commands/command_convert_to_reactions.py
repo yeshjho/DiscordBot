@@ -54,7 +54,7 @@ class CommandConvertToReactions(Command):
         original_msg = await msg.channel.fetch_message(msg.reference.message_id)
         if not original_msg:
             await msg.delete()
-            return ECommandExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 원본 메시지가 없어졌어요!"
+            raise CommandExecuteError(mention_user(msg.author), "원본 메시지가 없어졌어요!")
 
         await msg.delete()
 
@@ -74,7 +74,8 @@ class CommandConvertToReactions(Command):
                 current_to_find = ''
 
         if current_to_find != '':
-            return ECommandExecuteResult.CUSTOM_ERROR, mention_user(msg.author) + " 이모지가 부족해요!"
+            raise CommandExecuteError(mention_user(msg.author), "이모지가 부족해요!")
+
         else:
             try:
                 for icon_name in icon_name_list:

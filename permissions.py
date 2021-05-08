@@ -33,7 +33,7 @@ class Permissions:
             levels += [self.permissions['role'].get(role.id, EPermissionLevel.ALL) for role in target.roles]
             levels.append(self.permissions['guild'].get(target.guild.id, EPermissionLevel.ALL))
         elif type_ is User:
-            levels.append(self.permissions['user_id'].get(target.id, EPermissionLevel.ALL))
+            levels.append(self.permissions['user'].get(target.id, EPermissionLevel.ALL))
         elif type_ is Guild:
             levels.append(self.permissions['guild'].get(target.guild.id, EPermissionLevel.ALL))
         elif type_ is Role:

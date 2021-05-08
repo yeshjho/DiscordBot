@@ -52,6 +52,7 @@ class CommandPermission(Command):
 
             if IS_TESTING:
                 await msg.channel.send("테스트 중이라 새 권한 정보는 유실될 거예요!")
+                return ECommandExecuteResult.SUCCESS, "(was testing)"
 
         else:
             raise

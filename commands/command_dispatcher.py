@@ -6,7 +6,7 @@ from discord import Message
 
 from commands.command import ECommandExecuteResult, CommandExecuteError
 from helper_functions import *
-from logger import log_command
+from logger import *
 
 commands = []
 
@@ -33,10 +33,13 @@ class NonExitingArgumentParser(argparse.ArgumentParser):
 
 async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     if IS_TESTING and msg.author.id != OWNER_ID:
+        await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!")
         return
 
     command_str = alias_map.get(command_str, command_str)
     if command_str in commands_map:
+        Logger.log("Executing command:", command_str, "with", msg.content)
+
         command = commands_map[command_str]
 
         parser = NonExitingArgumentParser(add_help=False)

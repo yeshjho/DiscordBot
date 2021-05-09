@@ -3,6 +3,7 @@ from commands.command import *
 import discord.errors
 
 from helper_functions import *
+from emoji_container import *
 
 
 class CommandConvertToReactions(Command):
@@ -14,27 +15,6 @@ class CommandConvertToReactions(Command):
     """
     def __init__(self):
         super().__init__()
-
-        self.letter_icon_map = {'a': ['🇦', '🅰️'], 'b': ['🇧', '🅱️'], 'c': ['🇨'], 'd': ['🇩'], 'e': ['🇪'],
-                                'f': ['🇫'], 'g': ['🇬'], 'h': ['🇭'], 'i': ['🇮', 'ℹ️'], 'j': ['🇯'], 'k': ['🇰'],
-                                'l': ['🇱'], 'm': ['🇲'], 'n': ['🇳'], 'o': ['🇴', '🅾️'], 'p': ['🇵', '🅿️'],
-                                'q': ['🇶'], 'r': ['🇷'], 's': ['🇸'], 't': ['🇹'], 'u': ['🇺'], 'v': ['🇻'],
-                                'w': ['🇼'], 'x': ['🇽'], 'y': ['🇾'], 'z': ['🇿'],
-                                '0': ['0️⃣'], '1': ['1️⃣'], '2': ['2️⃣'], '3': ['3️⃣'], '4': ['4️⃣'], '5': ['5️⃣'],
-                                '6': ['6️⃣'], '7': ['7️⃣'], '8': ['8️⃣'], '9': ['9️⃣'], '10': ['🔟'],
-                                'ab': ['🆎'], 'cl': ['🆑'], 'ok': ['🆗'], 'ng': ['🆖'], 'id': ['🆔'], 'sos': ['🆘'],
-                                'vs': ['🆚'], 'cool': ['🆒'], 'new': ['🆕'], 'free': ['🆓'], 'abc': ['🔤'], 'wc': ['🚾'],
-                                '!': ['❗', '❕'], '?': ['❓', '❔'], '!!': ['‼️'], '!?': ['⁉️']}
-        self.skip_letters = [' ']
-
-        extra_emoji_num = 3
-        extra_vowel_num = 2
-        for i in range(1, extra_emoji_num + 1):
-            for c in "abcdefghijklmnopqrstuvwxyz":
-                self.letter_icon_map[c].insert(0, "#" + c + "_" * i)
-        for i in range(extra_emoji_num + 1, extra_emoji_num + extra_vowel_num + 1):
-            for c in "aeiou":
-                self.letter_icon_map[c].insert(0, "#" + c + "_" * i)
 
     def get_command_str(self) -> str:
         return "react"
@@ -57,31 +37,12 @@ class CommandConvertToReactions(Command):
             raise CommandExecuteError(mention_user(msg.author), "원본 메시지가 없어졌어요!")
 
         await msg.delete()
-
-        s = ''.join(args.letters).lower()
-        letter_icon_map_copy = self.letter_icon_map.copy()
-        icon_name_list = []
-
-        current_to_find = ''
-        for c in s:
-            if c in self.skip_letters:
-                continue
-
-            current_to_find += c
-            if current_to_find in letter_icon_map_copy and len(letter_icon_map_copy[current_to_find]) > 0:
-                icon_name_list.append(letter_icon_map_copy[current_to_find][0])
-                letter_icon_map_copy[current_to_find] = letter_icon_map_copy[current_to_find][1:]
-                current_to_find = ''
-
-        if current_to_find != '':
+        emojis = await emoji_container.get_emojis_for_reaction(''.join(args.letters).lower())
+        if not emojis:
             raise CommandExecuteError(mention_user(msg.author), "이모지가 부족해요!")
 
-        else:
-            try:
-                for icon_name in icon_name_list:
-                    emoji = icon_name
-                    if emoji.startswith('#'):
-                        emoji = discord.utils.get(kwargs['bot'].emojis, name=emoji[1:])
-                    await original_msg.add_reaction(emoji)
-            except discord.errors.Forbidden:
-                pass
+        try:
+            for emoji in emojis:
+                await original_msg.add_reaction(emoji)
+        except discord.errors.Forbidden:
+            pass

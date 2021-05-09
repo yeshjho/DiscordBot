@@ -11,4 +11,5 @@ IS_TESTING = False
 - slash command - https://discord.com/developers/docs/interactions/slash-commands
 - command word
 - korean emojis
+- fix early returns not working in decorators
 """

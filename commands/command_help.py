@@ -49,7 +49,7 @@ class CommandHelp(Command):
             await msg.channel.send(embed=embed)
 
         else:
-            embed = get_embed("설명서")
+            embed = get_embed("도움말")
             for command_str, command_ in commands_map.items():
                 doc = command_.__doc__
 

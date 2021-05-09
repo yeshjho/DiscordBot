@@ -1,10 +1,10 @@
 import discord
 from discord import Game
-import asyncio
 import logging
 
 from actions.action_dispatcher import *
 from commands.command_dispatcher import *
+from emoji_container import *
 from helper_functions import *
 
 
@@ -26,9 +26,13 @@ class DiscordBot(discord.Client):
     def __init__(self):
         super().__init__(activity=Game(name="`help" if not IS_TESTING else "테스트"))
 
-    @staticmethod
-    async def on_ready():
+        self.emoji_cache_guilds = None
+
+    async def on_ready(self):
         print("Ready!")
+
+        self.emoji_cache_guilds = list(filter(lambda x: x.name == "yeshjho_emoji1님의 서버", self.guilds))
+        emoji_container.initialize_cache(self.emoji_cache_guilds, self.emojis)
 
     @dispatch_action()
     async def on_message(self, msg: discord.Message):

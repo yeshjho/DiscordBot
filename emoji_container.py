@@ -94,8 +94,8 @@ class EmojiContainer:
     async def get_emojis_for_saying(self, letters: str) -> tuple:
         for c in letters:
             if EmojiContainer.is_korean_letter(c):
-                v = self.ko_emoji_frequency.setdefault(ord(c), 0)
-                v += 1
+                self.ko_emoji_frequency.setdefault(ord(c), 0)
+                self.ko_emoji_frequency[ord(c)] += 1
         save_data(self.ko_emoji_frequency_file_name, self.ko_emoji_frequency)
 
         to_return = []

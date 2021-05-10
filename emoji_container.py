@@ -38,7 +38,7 @@ class EmojiContainer:
 
     @staticmethod
     def is_korean_letter(c: str) -> bool:
-        return ord(c) in range(ord('가'), ord('힣') + 1) or ord(c) in range(ord('ㄱ'), ord('ㅣ') + 1)
+        return len(c) == 1 and (ord(c) in range(ord('가'), ord('힣') + 1) or ord(c) in range(ord('ㄱ'), ord('ㅣ') + 1))
 
     def get_emoji(self, name: str or Emoji) -> Emoji:
         if type(name) is str and name.startswith('#'):

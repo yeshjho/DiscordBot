@@ -1,10 +1,5 @@
-import datetime
-
 from commands.command import *
 
-import discord.utils
-
-from helper_functions import *
 from emoji_container import *
 
 

@@ -4,7 +4,7 @@ from glob import glob
 
 from discord import Message
 
-from commands.command import ECommandExecuteResult, CommandExecuteError
+from commands.command import CommandExecuteError
 from helper_functions import *
 from logger import *
 

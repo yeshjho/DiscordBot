@@ -38,7 +38,7 @@ class CommandHelp(Command):
         commands_map = kwargs['commands_map']
         if args.command:
             if args.command not in commands_map:
-                raise CommandExecuteError(mention_user(msg.author), "존재하지 않는 명령어입니다!")
+                raise CommandExecuteError(mention_user(msg.author), "존재하지 않는 명령어입니다!", delete_after=1)
 
             target_command = commands_map[args.command]
             doc = target_command.__doc__
@@ -46,6 +46,10 @@ class CommandHelp(Command):
             embed = get_embed(args.command)
             embed.add_field(name=CommandHelp.get_syntax(args.command, doc),
                             value=CommandHelp.get_long_explanation(doc))
+
+            aliases = dict(filter(lambda x: x[1] == args.command, kwargs['alias_map'].items()))
+            if aliases:
+                embed.set_footer(text="다른 이름: " + ", ".join(aliases.keys()))
             await msg.channel.send(embed=embed)
 
         else:

@@ -10,7 +10,7 @@ from logger import *
 
 commands = []
 
-EXCLUDES = ['command_dispatcher']
+EXCLUDES = ['command_dispatcher', 'command_word']
 for command_file in glob('commands/**/*.py', recursive=True):
     module_name = ''.join(command_file.split('.')[:-1]).replace('\\', '.').replace('/', '.')
     file_name = module_name.split('.')[-1]
@@ -33,7 +33,7 @@ class NonExitingArgumentParser(argparse.ArgumentParser):
 
 async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     if IS_TESTING and msg.author.id != OWNER_ID:
-        await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!")
+        await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!", delete_after=1)
         return
 
     command_str = alias_map.get(command_str, command_str)
@@ -46,6 +46,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         command.fill_arg_parser(parser)
 
         additional_args = []
+        additional_kwargs = {}
         try:
             args_namespace, _ = parser.parse_known_args(args)
         except argparse.ArgumentError:
@@ -56,6 +57,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
             except CommandExecuteError as err:
                 return_value = ECommandExecuteResult.CUSTOM_ERROR
                 additional_args = err.args
+                additional_kwargs = err.kwargs
 
         if type(return_value) is tuple:
             additional_args = return_value[1:]
@@ -73,7 +75,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
             await commands_map['help'].execute(msg, fake_namespace, **kwargs)
 
         elif return_value == ECommandExecuteResult.CUSTOM_ERROR:
-            await command.on_custom_error(msg, additional_args)
+            await command.on_custom_error(msg, *additional_args, **additional_kwargs)
 
         else:
             raise

@@ -30,5 +30,5 @@ class CommandEmoji(Command):
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         await msg.delete()
-        emojis = await emoji_container.get_emojis_for_saying(''.join(args.letters).lower())
+        emojis = await emoji_container.get_emojis_for_saying(' '.join(args.letters).lower())
         await msg.channel.send(''.join(map(str, emojis)))

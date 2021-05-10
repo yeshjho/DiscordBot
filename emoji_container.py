@@ -20,7 +20,7 @@ class EmojiContainer:
                                  '0': ['0️⃣'], '1': ['1️⃣'], '2': ['2️⃣'], '3': ['3️⃣'], '4': ['4️⃣'], '5': ['5️⃣'],
                                  '6': ['6️⃣'], '7': ['7️⃣'], '8': ['8️⃣'], '9': ['9️⃣'],
                                  '!': ['❗', '❕'], '?': ['❓', '❔']}
-        self.skip_letters = [' ', '.', ',', '~', '(', ')']
+        self.skip_letters = ['.', ',', '~', '(', ')']
         self.en_guild_ids = [837690275719544904, 837697356380110860, 837690443633524770]
         self.cache_guild_emoji_len = {}
         self.emojis = None  # Use only for emojis other than Korean
@@ -71,12 +71,12 @@ class EmojiContainer:
                 raise
 
         with Image.open('database/korean_emojis/base.png') as base_img:
-            font = ImageFont.truetype("database/korean_emojis/NanumBarunGothic.ttf", 42, encoding="utf-8")
+            font = ImageFont.truetype("database/korean_emojis/TmoneyRoundWindRegular.ttf", 100, encoding="utf-8")
             text_image = Image.new("RGBA", base_img.size, (255, 255, 255, 0))
             draw_context = ImageDraw.Draw(text_image)
             byte_arr = BytesIO()
 
-            draw_context.text((5.5, 2), c, fill=(255, 255, 255, 255), font=font)
+            draw_context.text((16, 15), c, fill=(255, 255, 255, 255), font=font)
             emoji_image = Image.alpha_composite(base_img, text_image)
             emoji_image.save(byte_arr, format="PNG")
 
@@ -99,18 +99,30 @@ class EmojiContainer:
         save_data(self.ko_emoji_frequency_file_name, self.ko_emoji_frequency)
 
         to_return = []
+        to_create = []
         for c in letters:
             if c in self.skip_letters:
                 continue
 
-            if c in self.letter_emoji_map:
+            if c.isspace():
+                to_return.append(identity_returner(c))
+            elif c in self.letter_emoji_map:
                 to_return.append(identity_returner(self.get_emoji(self.letter_emoji_map[c][0])))
             elif EmojiContainer.is_korean_letter(c):
-                to_return.append(self.create_emoji(c, letters, self.get_target_guild()))
+                if c in to_create:
+                    to_return.append(identity_returner(c))
+                else:
+                    to_create.append(c)
+                    to_return.append(self.create_emoji(c, letters, self.get_target_guild()))
             else:
                 to_return.append(identity_returner(discord.utils.get(self.emojis, id=840907083021025290)))
 
-        return await asyncio.gather(*to_return)
+        result = list(await asyncio.gather(*to_return))
+        for index, emoji in enumerate(result):
+            if type(emoji) is str and EmojiContainer.is_korean_letter(emoji):
+                result[index] = self.get_emoji(self.letter_emoji_map[emoji][0])
+
+        return tuple(result)
 
     async def get_emojis_for_reaction(self, letters: str) -> tuple:
         for c in letters:
@@ -127,19 +139,29 @@ class EmojiContainer:
         letter_emoji_map_copy = self.letter_emoji_map.copy()
 
         to_return = []
+        to_create = []
         for c in letters:
-            if c in self.skip_letters:
+            if c in self.skip_letters or c.isspace():
                 continue
 
             if len(letter_emoji_map_copy.get(c, [])) > 0:
                 to_return.append(identity_returner(self.get_emoji(letter_emoji_map_copy[c][0])))
                 letter_emoji_map_copy[c] = letter_emoji_map_copy[c][1:]
             elif EmojiContainer.is_korean_letter(c):
-                to_return.append(self.create_emoji(c, letters, self.get_target_guild()))
+                if c in to_create:
+                    to_return.append(identity_returner(c))
+                else:
+                    to_create.append(c)
+                    to_return.append(self.create_emoji(c, letters, self.get_target_guild()))
             else:
                 return ()
 
-        return await asyncio.gather(*to_return)
+        result = list(await asyncio.gather(*to_return))
+        for index, emoji in enumerate(result):
+            if type(emoji) is str and EmojiContainer.is_korean_letter(emoji):
+                result[index] = self.get_emoji(self.letter_emoji_map[emoji][0])
+
+        return tuple(result)
 
 
 emoji_container = EmojiContainer()

@@ -2,7 +2,6 @@ from commands.command import *
 
 import discord.errors
 
-from helper_functions import *
 from emoji_container import *
 
 
@@ -29,17 +28,17 @@ class CommandConvertToReactions(Command):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         if not msg.reference:
             await msg.delete()
-            return ECommandExecuteResult.SYNTAX_ERROR
+            raise CommandExecuteError(mention_user(msg.author), "답장하는 메시지가 없어요!", delete_after=2)
 
         original_msg = await msg.channel.fetch_message(msg.reference.message_id)
         if not original_msg:
             await msg.delete()
-            raise CommandExecuteError(mention_user(msg.author), "원본 메시지가 없어졌어요!")
+            raise CommandExecuteError(mention_user(msg.author), "원본 메시지가 없어졌어요!", delete_after=2)
 
         await msg.delete()
         emojis = await emoji_container.get_emojis_for_reaction(''.join(args.letters).lower())
         if not emojis:
-            raise CommandExecuteError(mention_user(msg.author), "이모지가 부족해요!")
+            raise CommandExecuteError(mention_user(msg.author), "이모지가 부족해요!", delete_after=1)
 
         try:
             for emoji in emojis:

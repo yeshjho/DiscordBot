@@ -9,7 +9,9 @@ from permissions import *
 
 
 class CommandExecuteError(Exception):
-    pass
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args)
+        self.kwargs = kwargs
 
 
 class Command(metaclass=ABCMeta):
@@ -33,8 +35,8 @@ class Command(metaclass=ABCMeta):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         pass
 
-    async def on_custom_error(self, msg: Message, arguments: list):
-        await msg.channel.send(' '.join(arguments))
+    async def on_custom_error(self, msg: Message, *args, **kwargs):
+        await msg.channel.send(' '.join(args), delete_after=kwargs.get('delete_after', None))
 
 
 def execute_condition_checker():

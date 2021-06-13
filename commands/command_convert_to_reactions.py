@@ -28,7 +28,9 @@ class CommandConvertToReactions(Command):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         if not msg.reference:
             await msg.delete()
-            raise CommandExecuteError(mention_user(msg.author), "답장하는 메시지가 없어요!", delete_after=2)
+            raise CommandExecuteError(mention_user(msg.author),
+                                      "답장하는 메시지가 없어요! 반응을 달 메시지를 우클릭->답장한 뒤 명령어를 실행해주세요",
+                                      delete_after=2)
 
         original_msg = await msg.channel.fetch_message(msg.reference.message_id)
         if not original_msg:

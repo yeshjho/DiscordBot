@@ -37,17 +37,22 @@ class CommandHelp(Command):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         commands_map = kwargs['commands_map']
         if args.command:
-            if args.command not in commands_map:
+            target_command = commands_map.get(args.command, None)
+            if not target_command:
+                target_command = commands_map.get(kwargs['alias_map'].get(args.command, None), None)
+
+            if not target_command:
                 raise CommandExecuteError(mention_user(msg.author), "존재하지 않는 명령어입니다!", delete_after=1)
 
-            target_command = commands_map[args.command]
             doc = target_command.__doc__
 
-            embed = get_embed(args.command)
-            embed.add_field(name=CommandHelp.get_syntax(args.command, doc),
+            target_command_str = target_command.get_command_str()
+
+            embed = get_embed(target_command_str)
+            embed.add_field(name=CommandHelp.get_syntax(target_command_str, doc),
                             value=CommandHelp.get_long_explanation(doc))
 
-            aliases = dict(filter(lambda x: x[1] == args.command, kwargs['alias_map'].items()))
+            aliases = dict(filter(lambda x: x[1] == target_command_str, kwargs['alias_map'].items()))
             if aliases:
                 embed.set_footer(text="다른 이름: " + ", ".join(aliases.keys()))
             await msg.channel.send(embed=embed)

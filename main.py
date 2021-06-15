@@ -3,8 +3,11 @@ import logging
 
 from actions.action_dispatcher import *
 from commands.command_dispatcher import *
+from schedules.schedule import *
 from emoji_container import *
 from helper_functions import *
+
+import schedules.initial_schedules
 
 
 logging.basicConfig(level=logging.INFO)
@@ -31,7 +34,17 @@ class DiscordBot(discord.Client):
         print("Ready!")
 
         self.emoji_cache_guilds = list(filter(lambda x: x.name == "yeshjho_emoji1님의 서버", self.guilds))
+
+        """
+        for guild in self.emoji_cache_guilds:
+            for emoji in guild.emojis:
+                await emoji.delete()
+        """
+
         emoji_container.initialize_cache(self.emoji_cache_guilds, self.emojis)
+
+        schedules.initial_schedules.schedule_initial(main_global=globals(), bot=self, commands_map=commands_map,
+                                                     actions=actions, alias_map=alias_map)
 
     @dispatch_action()
     async def on_message(self, msg: discord.Message):
@@ -205,6 +218,7 @@ class DiscordBot(discord.Client):
 if __name__ == "__main__":
     discord_bot = DiscordBot()
     loop = asyncio.get_event_loop()
+    discord_bot.loop.create_task(Scheduler.main_loop())
     try:
         loop.run_until_complete(discord_bot.start(BOT_KEY))
     except KeyboardInterrupt:

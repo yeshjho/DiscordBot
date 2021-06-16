@@ -1,0 +1,87 @@
+`enum class` 말고 `enum struct`도 된다
+
+@@@
+
+`inline namespace` 라는 것이 존재한다.
+다른 namespace 안에 inline namespace를 선언하면, 상위 namespace에서도 바로 해당 namespace 안의 원소들에 접근할 수 있다.
+예)
+```cpp
+namespace A
+{
+    inline namespace B
+    {
+        class C;
+    }
+}
+A::C c;  // A::B::C를 안 해도 된다
+```
+코드를 정돈하고 싶지만 nested namespace에 접근하는 귀찮음은 피하고 싶을 때 쓸 수 있다.
+
+@@@
+
+람다 함수의 주소를 가져올 수 있다.
+`+[](){}`와 같이 변수 캡처 부분 앞에 `+`를 붙이면 된다.
+단, 변수를 캡처하는 순간 컴파일러가 함수만 만들지 않고 클래스를 만들어서 인스턴스를 생성하기 때문에, 이때는 사용이 불가능하다.
+
+@@@
+
+non-type variadic template arguments에 대해 void를 리턴하는 함수를 호출하고 싶다면 이렇게 하면 된다.
+```cpp
+template<char... C>
+void Dispatch()
+{
+    [[maybe_unused]] int a[] { (FunctionThatTakesAChar(C), 0)... };
+}
+```
+
+@@@
+
+```cpp
+template<typename CType>
+class C;
+
+class DerivedC : public C<DerivedC>;
+```
+와 같은 패턴을 **C**uriosly **R**ecurring **T**emplate **P**rogramming이라고 한다.
+Static Polymorphism, Polymorphic Chaining 같은 게 가능하고, 위의 예제에서 `C`가 한 클래스를 상속받게 만들면 구체화된 모든 클래스(예제에서 `DerivedC`와 같은 것)를 한곳에서 모두 알 수 있다는 장점이 있다.
+
+@@@
+
+비주얼 스튜디오에서 **Ctrl+T**를 누르면 원하는 파일/클래스/함수 등등을 이름으로 빠르게 검색해 찾아갈 수 있다.
+
+@@@
+
+비주얼 스튜디오에서 함수 위에 커서를 올리고 **Ctrl+K+T**를 누르면 Call Hierarchy를 볼 수 있다.
+
+@@@
+
+비주얼 스튜디오에서 **Ctrl+Shift+V**를 누르면 클립보드 히스토리에서 원하는 걸 붙여넣을 수 있다. 다른 웬만한 곳에서도 가능.
+
+@@@
+
+비주얼 스튜디오에서 한 원소에 커서를 올려놓고 **Shift+Alt+F12**를 누르면 해당 원소의 사용처를 모두 검색한다.
+
+@@@
+
+비주얼 스튜디오에서 코드 블럭을 드래깅하고 **Ctrl+K+S**를 누르면 해당 코드 블럭을 if...else, try...catch 등으로 감쌀 수 있다.
+
+@@@
+
+비주얼 스튜디오에서 괄호 위에 커서를 올려놓고 **Ctrl+]**를 누르면 해당 괄호의 짝으로 이동한다.
+
+@@@
+
+비주얼 스튜디오에서 한 원소에 커서를 올려놓고 **Ctrl+R+R**을 누르면 해당 원소를 리네이밍할 수 있다.
+
+@@@
+
+비주얼 스튜디오에서, 리샤퍼가 깔려 있다면 함수에 커서를 올려놓고 **Ctrl+R+S**를 누르면 해당 함수의 시그니처를 바꿀 수 있다.
+
+@@@
+
+비주얼 스튜디오에서 **Ctrl+Break**를 누르면 빌드를 중단한다.
+
+@@@
+
+비주얼 스튜디오의 프로젝트 기본 설정은 쓰레드를 1개만 써서 컴파일한다.
+프로젝트 설정에서 C/C++ > General > Multi-processor Compilation을 Yes로 해주자.

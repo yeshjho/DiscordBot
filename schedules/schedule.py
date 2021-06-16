@@ -30,12 +30,11 @@ class Scheduler:
                     break
 
     @staticmethod
-    async def update() -> datetime.timedelta:
+    async def update():
         curr_time = datetime.datetime.now()
         diff = curr_time - Scheduler.prev_time
         Scheduler.prev_time = curr_time
 
-        min_time = datetime.timedelta(0, 1)
         to_remove = []
         for schedule_id, schedule in Scheduler.schedules.items():
             if schedule.scheduler_granted_remaining_time <= diff:
@@ -46,18 +45,15 @@ class Scheduler:
                     schedule.scheduler_granted_remaining_time = result
             else:
                 schedule.scheduler_granted_remaining_time -= diff
-                min_time = min(min_time, schedule.scheduler_granted_remaining_time)
 
         for remove_id in to_remove:
             Scheduler.remove(remove_id)
 
-        return min_time
-
     @staticmethod
     async def main_loop():
         while True:
-            min_time = await Scheduler.update()
-            await asyncio.sleep(min_time.microseconds / float(1000000))
+            await Scheduler.update()
+            await asyncio.sleep(0)
 
 
 class Schedule(metaclass=ABCMeta):

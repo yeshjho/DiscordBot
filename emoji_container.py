@@ -2,8 +2,8 @@ import asyncio
 from collections import Counter
 from io import BytesIO
 
-import discord.utils
-from discord import Guild, Emoji
+import nextcord.utils
+from nextcord import Guild, Emoji
 from PIL import Image, ImageFont, ImageDraw
 
 from helper_functions import *
@@ -58,7 +58,7 @@ class EmojiContainer:
             for emoji_name, _ in sorted(self.ko_emoji_frequency.items(), key=lambda x: x[1]):
                 if chr(emoji_name) not in letters_to_keep:
                     emoji = list(filter(lambda x: x.name == chr(emoji_name)
-                                        and discord.utils.get(self.cache_guild_emoji_len.keys(), id=x.guild_id),
+                                        and nextcord.utils.get(self.cache_guild_emoji_len.keys(), id=x.guild_id),
                                         self.emojis))
                     if emoji:
                         emoji = emoji[0]
@@ -115,7 +115,7 @@ class EmojiContainer:
                     to_create.append(c)
                     to_return.append(self.create_emoji(c, letters, self.get_target_guild()))
             else:
-                to_return.append(identity_returner(discord.utils.get(self.emojis, id=840907083021025290)))
+                to_return.append(identity_returner(nextcord.utils.get(self.emojis, id=840907083021025290)))
 
         result = list(await asyncio.gather(*to_return))
         for index, emoji in enumerate(result):

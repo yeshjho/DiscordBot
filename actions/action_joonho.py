@@ -1,6 +1,6 @@
 from actions.action import *
 
-from discord import Message
+from nextcord import Message
 
 from helper_functions import *
 

@@ -1,7 +1,7 @@
 from actions.action import *
 
-import discord.errors
-from discord import Message
+import nextcord.errors
+from nextcord import Message
 
 from commands.games.command_hangman import CommandHangman, EGuessResult
 from helper_functions import *
@@ -29,7 +29,7 @@ class ActionHangmanGuess(Action):
         else:
             try:
                 game_msg = await msg.channel.fetch_message(msg_id)
-            except discord.errors.NotFound:
+            except nextcord.errors.NotFound:
                 msg_id = (await msg.channel.send(game.get_msg())).id
             else:
                 await game_msg.edit(content=game.get_msg())

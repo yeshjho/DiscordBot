@@ -2,7 +2,7 @@ from commands.command import *
 
 from random import choice
 
-import discord.errors
+import nextcord.errors
 
 
 class EGuessResult:
@@ -157,7 +157,7 @@ class CommandHangman(Command):
             msg_id, session = self.sessions[author_id]
             try:
                 session_msg = await msg.channel.fetch_message(msg_id)
-            except discord.errors.NotFound:
+            except nextcord.errors.NotFound:
                 self.sessions[author_id][0] = (await msg.channel.send(self.sessions[author_id][1].get_msg())).id
                 save_data(self.session_file_name, self.sessions)
             else:

@@ -2,7 +2,7 @@ import argparse
 from importlib import import_module
 from glob import glob
 
-from discord import Message
+from nextcord import Message
 
 from commands.command import CommandExecuteError
 from helper_functions import *

@@ -1,4 +1,4 @@
-from discord import Game
+from nextcord import Game
 import logging
 
 from actions.action_dispatcher import *
@@ -24,7 +24,7 @@ def dispatch_action():
     return wrapper
 
 
-class DiscordBot(discord.Client):
+class DiscordBot(nextcord.Client):
     def __init__(self):
         super().__init__(activity=Game(name="`help" if not IS_TESTING else "테스트"))
 
@@ -47,7 +47,7 @@ class DiscordBot(discord.Client):
                                                      actions=actions, alias_map=alias_map)
 
     @dispatch_action()
-    async def on_message(self, msg: discord.Message):
+    async def on_message(self, msg: nextcord.Message):
         if msg.author.bot:
             return
 

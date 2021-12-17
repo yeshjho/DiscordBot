@@ -1,5 +1,5 @@
 from random import choice
-import discord.utils
+import nextcord.utils
 
 from constants import *
 
@@ -18,8 +18,8 @@ cpp_tips_container = CppTipsContainer()
 
 
 async def publish_random_cpp_tips(bot):
-    guild = discord.utils.get(bot.guilds, id=PUBLISH_GUILD_ID)
-    channel = discord.utils.get(guild.channels, id=PUBLISH_CHANNEL_ID)
+    guild = nextcord.utils.get(bot.guilds, id=PUBLISH_GUILD_ID)
+    channel = nextcord.utils.get(guild.channels, id=PUBLISH_CHANNEL_ID)
 
     message = await channel.send(cpp_tips_container.get_random_tip())
     await message.publish()

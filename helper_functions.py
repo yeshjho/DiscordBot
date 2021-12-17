@@ -1,4 +1,4 @@
-from discord import Member, Embed
+from nextcord import Member, Embed
 
 from os.path import isfile
 import pickle

@@ -1,6 +1,6 @@
 from commands.command import *
 
-import discord.utils
+import nextcord.utils
 
 
 class CommandPublish(Command):
@@ -26,8 +26,8 @@ class CommandPublish(Command):
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        guild = discord.utils.get(kwargs['bot'].guilds, id=PUBLISH_GUILD_ID)
-        channel = discord.utils.get(guild.channels, id=PUBLISH_CHANNEL_ID)
+        guild = nextcord.utils.get(kwargs['bot'].guilds, id=PUBLISH_GUILD_ID)
+        channel = nextcord.utils.get(guild.channels, id=PUBLISH_CHANNEL_ID)
 
         await msg.delete()
 

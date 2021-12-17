@@ -1,6 +1,6 @@
 from commands.command import *
 
-import discord.errors
+import nextcord.errors
 
 from emoji_container import *
 
@@ -45,5 +45,5 @@ class CommandConvertToReactions(Command):
         try:
             for emoji in emojis:
                 await original_msg.add_reaction(emoji)
-        except discord.errors.Forbidden:
+        except nextcord.errors.Forbidden:
             pass

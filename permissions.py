@@ -1,6 +1,6 @@
 from sys import maxsize
 
-from discord import User, Guild, Role
+from nextcord import User, Guild, Role
 
 from helper_functions import *
 

@@ -2,7 +2,7 @@ from abc import ABCMeta, abstractmethod
 import argparse
 from asyncmock import AsyncMock
 
-from discord import Message
+from nextcord import Message
 
 from common import ECommandExecuteResult
 from permissions import *

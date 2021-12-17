@@ -35,11 +35,11 @@ class DiscordBot(nextcord.Client):
 
         self.emoji_cache_guilds = list(filter(lambda x: x.name == "yeshjho_emoji1님의 서버", self.guilds))
 
-        """
-        for guild in self.emoji_cache_guilds:
-            for emoji in guild.emojis:
-                await emoji.delete()
-        """
+        if RESET_CACHE_EMOJIS:
+            for guild in self.emoji_cache_guilds:
+                for emoji in guild.emojis:
+                    print("deleting an emoji")
+                    await emoji.delete()
 
         emoji_container.initialize_cache(self.emoji_cache_guilds, self.emojis)
 

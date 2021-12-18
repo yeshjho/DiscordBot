@@ -22,4 +22,4 @@ class CommandKill(Command):
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         await msg.channel.send(emojify('wave'))
-        await kwargs['bot'].logout()
+        await kwargs['bot'].close()

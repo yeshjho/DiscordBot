@@ -47,41 +47,78 @@ Static Polymorphism, Polymorphic Chaining 같은 게 가능하고, 위의 예제
 
 @@@
 
-비주얼 스튜디오에서 **Ctrl+T**를 누르면 원하는 파일/클래스/함수 등등을 이름으로 빠르게 검색해 찾아갈 수 있다.
-
-@@@
-
-비주얼 스튜디오에서 함수 위에 커서를 올리고 **Ctrl+K+T**를 누르면 Call Hierarchy를 볼 수 있다.
-
-@@@
-
-비주얼 스튜디오에서 **Ctrl+Shift+V**를 누르면 클립보드 히스토리에서 원하는 걸 붙여넣을 수 있다. 다른 웬만한 곳에서도 가능.
-
-@@@
-
-비주얼 스튜디오에서 한 원소에 커서를 올려놓고 **Shift+Alt+F12**를 누르면 해당 원소의 사용처를 모두 검색한다.
-
-@@@
-
-비주얼 스튜디오에서 코드 블럭을 드래깅하고 **Ctrl+K+S**를 누르면 해당 코드 블럭을 if...else, try...catch 등으로 감쌀 수 있다.
-
-@@@
-
-비주얼 스튜디오에서 괄호 위에 커서를 올려놓고 **Ctrl+]**를 누르면 해당 괄호의 짝으로 이동한다.
-
-@@@
-
-비주얼 스튜디오에서 한 원소에 커서를 올려놓고 **Ctrl+R+R**을 누르면 해당 원소를 리네이밍할 수 있다.
-
-@@@
-
-비주얼 스튜디오에서, 리샤퍼가 깔려 있다면 함수에 커서를 올려놓고 **Ctrl+R+S**를 누르면 해당 함수의 시그니처를 바꿀 수 있다.
-
-@@@
-
-비주얼 스튜디오에서 **Ctrl+Break**를 누르면 빌드를 중단한다.
+비주얼 스튜디오 단축키 모음집
+- Ctrl+T/Ctrl+,   파일/함수/변수 등 시그니처가 있는 것들을 이름으로 찾기
+- Ctrl+K+T        Call Hierarchy
+- Shift+Alt+F12   사용처 검색
+- Shift+Alt+L     솔루션 탐색기에서 보기
+- Ctrl+R+M        메소드로 추출
+- Ctrl+J          멤버 리스트 보기
+- Ctrl+K+S        ~로 감싸기 메뉴
+- Ctrl+K+X        코드 스니펫 삽입
+- Ctrl+Alt+←/→    이전/다음 sub-word
+- Alt+Shift+Click 멀티 커서
+- Ctrl+K+D        현재 문서 포매팅
+- Ctrl+K+C        코멘트화
+- Ctrl+K+U        코멘트 해제
+- Ctrl+K+O        헤더/소스 스위칭
+- Ctrl+R+R        Rename
+- Ctrl+R+S        [Resharper] 시그니처 변경
+- Ctrl+Break      빌드 중단
+- Ctrl+F7         현재 파일 컴파일
 
 @@@
 
 비주얼 스튜디오의 프로젝트 기본 설정은 쓰레드를 1개만 써서 컴파일한다.
 프로젝트 설정에서 C/C++ > General > Multi-processor Compilation을 Yes로 해주자.
+
+@@@
+
+```cpp
+class Q
+{
+protected:
+    int i;
+};
+
+class R : public Q
+{
+public:
+    using Q::i;
+};
+```
+이런 식으로 부모의 protected인 멤버들을 자식 클래스에서 public으로 바꿀 수 있다
+
+@@@
+
+`extern template`
+
+한 템플릿에 똑같은 인자를 넣어서 똑같이 instantiate하는 translation unit이 여러 개 있으면 각 유닛이 똑같은 instantiation을 각자 컴파일해야 한다. 그러면 링크 페이즈 때 그 코드 중 하나만 남고 나머지는 버려지기 때문에 컴파일 타임 낭비인데다 오브젝트 파일 사이즈까지 필요 이상으로 커진다. 이를 보완하기 위해 `extern template`이 존재한다. 한 translation unit에 `extern template + (템플릿 특수화)`를 선언하면 그 유닛에서는 해당 instantiation를 생성하지 않고 링크 시에 찾아서 바인딩한다고 한다.
+
+예시)
+<foo.h>
+```cpp
+template<typename T>
+class C {};
+```
+
+<bar.cpp>
+```cpp
+#include "foo.h"
+C<int> c;  // 첫 번째 instantiation
+```
+
+<bar2.cpp>
+```cpp
+#include "foo.h"
+C<int> c;  // 두 번째 instantiation
+```
+
+여기서 bar2.cpp를
+```cpp
+#include "foo.h"
+extern template C<int>;
+C<int> c;
+```
+와 같이 바꾸면 bar2의 오브젝트 파일에는 C<int>의 instantiation이 없다
+

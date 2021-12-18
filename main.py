@@ -222,6 +222,6 @@ if __name__ == "__main__":
     try:
         loop.run_until_complete(discord_bot.start(BOT_KEY))
     except KeyboardInterrupt:
-        loop.run_until_complete(discord_bot.logout())
+        loop.run_until_complete(discord_bot.close())
     finally:
         loop.close()

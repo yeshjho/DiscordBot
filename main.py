@@ -1,5 +1,6 @@
 from nextcord import Game
 import logging
+import os
 
 from actions.action_dispatcher import *
 from commands.command_dispatcher import *
@@ -220,7 +221,7 @@ if __name__ == "__main__":
     loop = asyncio.get_event_loop()
     discord_bot.loop.create_task(Scheduler.main_loop())
     try:
-        loop.run_until_complete(discord_bot.start(BOT_KEY))
+        loop.run_until_complete(discord_bot.start(os.getenv('DISCORD_BOT_KEY', 'err')))
     except KeyboardInterrupt:
         loop.run_until_complete(discord_bot.close())
     finally:

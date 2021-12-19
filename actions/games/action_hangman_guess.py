@@ -2,6 +2,8 @@ from actions.action import *
 
 import nextcord.errors
 from nextcord import Message
+import requests
+from bs4 import BeautifulSoup
 
 from commands.games.command_hangman import CommandHangman, EGuessResult
 from helper_functions import *
@@ -35,20 +37,22 @@ class ActionHangmanGuess(Action):
                 await game_msg.edit(content=game.get_msg())
 
             dict_link = 'https://en.dict.naver.com/#/search?query={}'.format(game.word)
+            soup = BeautifulSoup(requests.get(dict_link).content, "lxml")
+            meaning = soup.find('dl', {'class': 'list_e2'}).find('dd').find('span', {'class': 'fnt_k05'}).get_text()
 
             if guess_result == EGuessResult.NORMAL:
                 hangman_command.update_session(author_id, [msg_id, game])
                 Logger.log("Hangman:", author_id, "guessed letter", c)
 
             elif guess_result == EGuessResult.LOSE:
-                await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}".format(
-                    mention_user(msg.author), game.word, dict_link))
+                await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}\n{}".format(
+                    mention_user(msg.author), game.word, meaning, dict_link))
                 hangman_command.finish_game(author_id, False)
                 Logger.log("Hangman:", author_id, "lost")
 
             elif guess_result == EGuessResult.WIN:
-                await msg.channel.send("{} 축하드립니다! 정답을 맞히셨습니다!\n{}".format(
-                    mention_user(msg.author), dict_link))
+                await msg.channel.send("{} 축하드립니다! 정답을 맞히셨습니다!\n{}\n{}".format(
+                    mention_user(msg.author), meaning, dict_link))
                 hangman_command.finish_game(author_id, True)
                 Logger.log("Hangman:", author_id, "won")
 

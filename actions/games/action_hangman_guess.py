@@ -36,9 +36,12 @@ class ActionHangmanGuess(Action):
             else:
                 await game_msg.edit(content=game.get_msg())
 
-            dict_link = 'https://en.dict.naver.com/#/search?query={}'.format(game.word)
+            dict_link = 'http://endic.naver.com/search.nhn?query={}'.format(game.word)
             soup = BeautifulSoup(requests.get(dict_link).content, "lxml")
-            meaning = soup.find('dl', {'class': 'list_e2'}).find('dd').find('span', {'class': 'fnt_k05'}).get_text()
+            try:
+                meaning = soup.find('dl', {'class': 'list_e2'}).find('dd').find('span', {'class': 'fnt_k05'}).get_text()
+            except AttributeError:
+                meaning = ''
 
             if guess_result == EGuessResult.NORMAL:
                 hangman_command.update_session(author_id, [msg_id, game])

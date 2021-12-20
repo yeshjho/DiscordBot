@@ -1,16 +1,13 @@
-from nextcord import Game
 import logging
+
+from django.core.wsgi import get_wsgi_application
+from nextcord import Game
 
 from actions.action_dispatcher import *
 from commands.command_dispatcher import *
-from schedules.schedule import *
+from schedules.initial_schedules import *
 from emoji_container import *
 from helper_functions import *
-
-import schedules.initial_schedules
-
-
-logging.basicConfig(level=logging.INFO)
 
 
 def dispatch_action():
@@ -45,7 +42,6 @@ class DiscordBot(nextcord.Client):
     @dispatch_action()
     async def on_ready(self):
         print("Ready!")
-
         self.emoji_cache_guilds = list(filter(lambda x: x.name == "yeshjho_emoji1님의 서버", self.guilds))
 
         if RESET_CACHE_EMOJIS:
@@ -56,8 +52,8 @@ class DiscordBot(nextcord.Client):
 
         emoji_container.initialize_cache(self.emoji_cache_guilds, self.emojis)
 
-        schedules.initial_schedules.schedule_initial(main_global=globals(), bot=self, commands_map=commands_map,
-                                                     actions=actions, alias_map=alias_map)
+        schedule_initial(main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
+                         alias_map=alias_map)
 
     @dispatch_action()
     async def on_message(self, msg: nextcord.Message):
@@ -73,6 +69,11 @@ class DiscordBot(nextcord.Client):
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', "settings")
+    django_app = get_wsgi_application()
+
     discord_bot = DiscordBot()
     loop = asyncio.get_event_loop()
     discord_bot.loop.create_task(Scheduler.main_loop())

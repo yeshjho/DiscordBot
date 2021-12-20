@@ -11,3 +11,5 @@ class ActionImitateReaction(Action):
             return EActionExecuteResult.NO_MATCH
 
         await reaction.message.add_reaction(reaction.emoji)
+
+        return "reacted", reaction.emoji.name, "()".format(reaction.emoji.id), "following", user.id

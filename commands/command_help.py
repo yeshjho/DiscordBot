@@ -59,7 +59,7 @@ class CommandHelp(Command):
 
         else:
             embed = get_embed("도움말")
-            for command_str, command_ in commands_map.items():
+            for command_str, command_ in sorted(commands_map.items()):
                 doc = command_.__doc__
 
                 embed.add_field(name=CommandHelp.get_syntax(command_str, doc),

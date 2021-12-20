@@ -14,7 +14,7 @@ RESET_CACHE_EMOJIS = False
 """ TODOS
 - slash command - https://discord.com/developers/docs/interactions/slash-commands
 - command word
-- fix early returns not working in decorators
-- RPG: 서버를 아예 하나 파서 역할로 "마법사", "도적" 이런 거 해놓고 역할 부여
-			각 장소는 채널로 표현
+- RPG: 서버를 아예 하나 파서 역할로 "마법사", "도적" 이런 거 해놓고 역할 부여. 각 장소는 채널로 표현
+- 커스텀 커맨드? 길드별로, 권한 레벨 따라 사용할 수 있는 요소 더 많아짐
+- 사용자별로 command prefix 설정 가능하게
 """

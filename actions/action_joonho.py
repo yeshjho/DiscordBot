@@ -11,3 +11,5 @@ class ActionJoonho(Action):
             return EActionExecuteResult.NO_MATCH
 
         await msg.channel.send(mention_user(OWNER_ID))
+
+        # TODO: make it universally available and configurable

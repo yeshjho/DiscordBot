@@ -2,6 +2,8 @@ import asyncio
 from datetime import datetime, timedelta
 from typing import Dict
 
+from logger import log_schedule
+
 
 class Scheduler:
     class Schedule:
@@ -18,9 +20,12 @@ class Scheduler:
         async def execute(self) -> None:
             self.func(*self.args, **self.kwargs)
             if self.every == timedelta.min:
+                self.next_execute_timestamp = datetime.max
                 self.abort()
             else:
                 self.next_execute_timestamp = datetime.now() + self.every
+
+            log_schedule(self.name, self.next_execute_timestamp)
 
         def abort(self) -> None:
             del Scheduler.schedules[self.name]
@@ -31,6 +36,7 @@ class Scheduler:
     def schedule(func, name: str, start_at: datetime, every: timedelta = timedelta.min, *args, **kwargs):
         new_schedule = Scheduler.Schedule(func, name, every, args, kwargs)
         new_schedule.next_execute_timestamp = start_at
+        Scheduler.schedules[name] = new_schedule
 
     @staticmethod
     async def update():

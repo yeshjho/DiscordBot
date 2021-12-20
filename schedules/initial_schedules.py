@@ -4,6 +4,7 @@ from schedules.schedule_cpp_tips import *
 
 def get_next_hour(hour: int) -> datetime:
     now: datetime = datetime.now()
+    now.replace(minute=0, second=0, microsecond=0)
     today_hour = now.replace(hour=hour)
     return today_hour.replace(day=now.day + 1) if now > today_hour else today_hour
 

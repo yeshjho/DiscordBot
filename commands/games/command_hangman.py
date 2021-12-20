@@ -1,6 +1,7 @@
 from commands.command import *
 
 from random import choice
+from typing import Dict
 
 import nextcord.errors
 
@@ -18,6 +19,10 @@ class HangmanGame:
         self.user_id = user_id
         self.word = word
         self.used_characters = ''
+
+    def __str__(self):
+        return "HangmanGame(state: {}, user_id: {}, word: {}, used_chars: {})".format(
+            self.state, self.user_id, self.word, self.used_characters)
 
     def guess(self, c: str) -> int:
         if c in self.used_characters:

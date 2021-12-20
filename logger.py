@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from common import ECommandExecuteResult
+from common import ECommandExecuteResult, EActionExecuteResult
 
 
 class Logger:
@@ -15,6 +15,10 @@ command_execute_result_str = {
     ECommandExecuteResult.SYNTAX_ERROR: "Syntax Error", ECommandExecuteResult.CUSTOM_ERROR: "Custom Error"
 }
 
+action_execute_result_str = {
+    EActionExecuteResult.SUCCESS: "Success", EActionExecuteResult.NO_PERMISSION: "No Permission"
+}
+
 
 def log_command(command_str: str, msg, result: ECommandExecuteResult, additional_args: list):
     Logger.log("Command {}:".format(command_str),
@@ -26,6 +30,18 @@ def log_command(command_str: str, msg, result: ECommandExecuteResult, additional
                "(A DM channel)" if 'recipient' in dir(msg.channel) else "(A Group channel)",
                "as {}".format(msg.content),
                "resulted {}".format(command_execute_result_str[result]),
-               "({})".format(' '.join(map(str, additional_args)))
-               if len(additional_args) else ""
+               "({})".format(' '.join(map(str, additional_args))) if len(additional_args) else ""
+               )
+
+
+def log_action(action_name: str, result: EActionExecuteResult, additional_args: list):
+    Logger.log("Action {}:".format(action_name),
+               "resulted {}".format(action_execute_result_str[result]),
+               "({})".format(' '.join(map(str, additional_args))) if len(additional_args) else ""
+               )
+
+
+def log_schedule(schedule_name: str, next_timestamp: datetime):
+    Logger.log("Schedule {}:".format(schedule_name),
+               "next execute timestamp is {}".format(next_timestamp) if next_timestamp != datetime.max else ""
                )

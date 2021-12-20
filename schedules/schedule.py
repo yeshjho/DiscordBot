@@ -41,7 +41,7 @@ class Scheduler:
     @staticmethod
     async def update():
         now: datetime = datetime.now()
-        for _, schedule in Scheduler.schedules:
+        for _, schedule in Scheduler.schedules.items():
             if schedule.next_execute_timestamp <= now:
                 await schedule.execute()
 

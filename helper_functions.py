@@ -36,8 +36,9 @@ async def send_split(channel, msg: str, prefix: str = '', suffix: str = ''):
         await channel.send(prefix + result_split + suffix)
 
 
-def is_method_overriden(parent_class, child_object, method_name: str) -> bool:
-    return parent_class.__dict__[method_name].__code__ is not child_object.__getattribute__(method_name).__code__
+def is_method_overriden(parent_object, child_object, method_name: str) -> bool:
+    return parent_object.__getattribute__(method_name).__code__ is not \
+           child_object.__getattribute__(method_name).__code__
 
 
 def load_data(file_name: str, default_value=None):

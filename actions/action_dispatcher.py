@@ -19,7 +19,7 @@ for action_file in glob('actions/**/*.py', recursive=True):
 
 async def execute_action(method_name: str, *args, **kwargs):
     for action in actions:
-        if not is_method_overriden(Action, action, method_name):
+        if not hasattr(action, method_name):
             continue
 
         execute_result = await action.__getattribute__(method_name)(*args, **kwargs)
@@ -36,4 +36,4 @@ async def execute_action(method_name: str, *args, **kwargs):
             execute_result = EActionExecuteResult.SUCCESS
 
         if execute_result != EActionExecuteResult.NO_MATCH:
-            log_action(action.__class__.__name__, execute_result, *additional_args)
+            log_action(action.__class__.__name__, execute_result, additional_args)

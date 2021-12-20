@@ -15,10 +15,3 @@ class Action:
               'guild_unavailable', 'voice_state_update', 'stage_instance_create', 'stage_instance_delete',
               'stage_instance_update', 'member_ban', 'member_unban', 'invite_create', 'invite_delete',
               'group_join', 'group_remove']
-
-    def __init__(self):
-        def default_func(this, *args, **kwargs):
-            pass
-
-        for event in Action.EVENTS:
-            self.__setattr__('on_' + event, default_func.__get__(self))

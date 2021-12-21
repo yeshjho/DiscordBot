@@ -3,9 +3,9 @@ import logging
 from django.core.wsgi import get_wsgi_application
 from nextcord import Game
 
-from actions.action_dispatcher import *
-from commands.command_dispatcher import *
-from schedules.initial_schedules import *
+from actions.action_dispatcher import Action, execute_action, actions
+from commands.command_dispatcher import commands_map, alias_map, execute_command
+from schedules.initial_schedules import schedule_initial, Scheduler
 from emoji_container import *
 from helper_functions import *
 
@@ -71,7 +71,6 @@ class DiscordBot(nextcord.Client):
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
 
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', "settings")
     django_app = get_wsgi_application()
 
     discord_bot = DiscordBot()

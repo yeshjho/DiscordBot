@@ -1,9 +1,10 @@
 from commands.command import *
 
 from random import choice
-from typing import Dict
 
 import nextcord.errors
+
+from helper_functions import *
 
 
 class EGuessResult:

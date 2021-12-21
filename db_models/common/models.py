@@ -2,16 +2,16 @@ from db_models.base_model import *
 
 
 class User(BaseModel):
-    id = models.IntegerField(primary_key=True)
+    id = models.BigIntegerField(primary_key=True)
 
 
 class Guild(BaseModel):
-    id = models.IntegerField(primary_key=True)
+    id = models.BigIntegerField(primary_key=True)
 
 
 class Role(BaseModel):
-    id = models.IntegerField(primary_key=True)
-    Guild = models.ForeignKey(Guild, on_delete=models.CASCADE, related_name='guilds')
+    id = models.BigIntegerField(primary_key=True)
+    guild = models.ForeignKey(Guild, on_delete=models.CASCADE, related_name='guilds')
 
 
 class UserPermission(BaseModel):

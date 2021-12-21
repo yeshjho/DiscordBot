@@ -6,7 +6,6 @@ import nextcord.utils
 from nextcord import Guild, Emoji
 from PIL import Image, ImageFont, ImageDraw
 
-from helper_functions import *
 from logger import *
 
 
@@ -24,8 +23,6 @@ class EmojiContainer:
         self.en_guild_ids = [837690275719544904, 837697356380110860, 837690443633524770]
         self.cache_guild_emoji_len = {}
         self.emojis = None  # Use only for emojis other than Korean
-        self.ko_emoji_frequency_file_name = "data/ko_emoji_frequency.pickle"
-        self.ko_emoji_frequency = load_data(self.ko_emoji_frequency_file_name, {})
 
         extra_emoji_num = 3
         extra_vowel_num = 2
@@ -55,7 +52,10 @@ class EmojiContainer:
 
     async def create_emoji(self, c: str, letters_to_keep: str, target_guild: Guild):
         if target_guild is None:
-            for emoji_name, _ in sorted(self.ko_emoji_frequency.items(), key=lambda x: x[1]):
+            from db_models.words.models import CustomEmoji
+
+            for emoji in CustomEmoji.objects.order_by('times_used'):
+                emoji_name = emoji.letter
                 if chr(emoji_name) not in letters_to_keep:
                     emoji = list(filter(lambda x: x.name == chr(emoji_name)
                                         and nextcord.utils.get(self.cache_guild_emoji_len.keys(), id=x.guild_id),
@@ -92,11 +92,13 @@ class EmojiContainer:
                 return guild
 
     async def get_emojis_for_saying(self, letters: str) -> tuple:
+        from db_models.words.models import CustomEmoji
+
         for c in letters:
             if EmojiContainer.is_korean_letter(c):
-                self.ko_emoji_frequency.setdefault(ord(c), 0)
-                self.ko_emoji_frequency[ord(c)] += 1
-        save_data(self.ko_emoji_frequency_file_name, self.ko_emoji_frequency)
+                emoji, _ = CustomEmoji.objects.get_or_create(letter=c)
+                emoji.times_used += 1
+                emoji.save()
 
         to_return = []
         to_create = []
@@ -125,11 +127,13 @@ class EmojiContainer:
         return tuple(result)
 
     async def get_emojis_for_reaction(self, letters: str) -> tuple:
+        from db_models.words.models import CustomEmoji
+
         for c in letters:
             if EmojiContainer.is_korean_letter(c):
-                v = self.ko_emoji_frequency.setdefault(ord(c), 0)
-                v += 1
-        save_data(self.ko_emoji_frequency_file_name, self.ko_emoji_frequency)
+                emoji, _ = CustomEmoji.objects.get_or_create(letter=c)
+                emoji.times_used += 1
+                emoji.save()
 
         # TODO: No support for duplicate Korean letter for now
         for dup_letter in [k for k, v in Counter(letters).items() if v > 1]:

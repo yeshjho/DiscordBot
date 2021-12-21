@@ -7,4 +7,4 @@ class EnglishWord(BaseModel):
 
 class CustomEmoji(BaseModel):
     letter = models.CharField(max_length=1, primary_key=True)
-    times_used = models.PositiveIntegerField()
+    times_used = models.PositiveIntegerField(default=0)

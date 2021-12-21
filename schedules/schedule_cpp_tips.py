@@ -6,7 +6,7 @@ from constants import *
 
 class CppTipsContainer:
     def __init__(self):
-        with open("database/cpp_tips.txt", encoding='utf-8') as file:
+        with open("data/cpp_tips.txt", encoding='utf-8') as file:
             self.tips = file.read().split('@@@')
         self.tips = [x.strip() for x in self.tips]
 

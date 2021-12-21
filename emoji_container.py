@@ -24,7 +24,7 @@ class EmojiContainer:
         self.en_guild_ids = [837690275719544904, 837697356380110860, 837690443633524770]
         self.cache_guild_emoji_len = {}
         self.emojis = None  # Use only for emojis other than Korean
-        self.ko_emoji_frequency_file_name = "database/ko_emoji_frequency.pickle"
+        self.ko_emoji_frequency_file_name = "data/ko_emoji_frequency.pickle"
         self.ko_emoji_frequency = load_data(self.ko_emoji_frequency_file_name, {})
 
         extra_emoji_num = 3
@@ -70,8 +70,8 @@ class EmojiContainer:
             else:
                 raise
 
-        with Image.open('database/korean_emojis/base.png') as base_img:
-            font = ImageFont.truetype("database/korean_emojis/TmoneyRoundWindRegular.ttf", 100, encoding="utf-8")
+        with Image.open('data/korean_emojis/base.png') as base_img:
+            font = ImageFont.truetype("data/korean_emojis/TmoneyRoundWindRegular.ttf", 100, encoding="utf-8")
             text_image = Image.new("RGBA", base_img.size, (255, 255, 255, 0))
             draw_context = ImageDraw.Draw(text_image)
             byte_arr = BytesIO()

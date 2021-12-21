@@ -1,6 +1,9 @@
 from commands.command import *
 
+from django.core.exceptions import ObjectDoesNotExist
 from helper_functions import *
+
+from db_models.common.models import UserPermission, GuildPermission, RolePermission
 
 
 class CommandPermission(Command):
@@ -36,23 +39,30 @@ class CommandPermission(Command):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         if not args.mode:
             await msg.channel.send(mention_user(msg.author) + "님의 권한 레벨은 "
-                                   + str(permissions.get_permission_level(msg.author)) + "입니다")
+                                   + str(UserPermission.objects.get(id=msg.author.id)) + "입니다")
             return
 
-        if permissions.get_permission_level(msg.author) < EPermissionLevel.ADMIN:
+        if kwargs['permission_level'] < EPermissionLevel.ADMIN:
             return ECommandExecuteResult.NO_PERMISSION
 
+        if args.type == 'user':
+            permission_group = UserPermission
+        elif args.type == 'guild':
+            permission_group = GuildPermission
+        else:
+            permission_group = RolePermission
+
         if args.mode == 'get':
-            await msg.channel.send("해당 권한 레벨은 " +
-                                   str(permissions.get_permission_level(args.type, args.id)) + "입니다")
+            level = None
+            try:
+                level = permission_group.objects.get(id=args.id).level
+            except ObjectDoesNotExist:
+                pass
+            await msg.channel.send("해당하는 권한 레벨이 없습니다" if level is None else "해당 권한 레벨은 " + str(level) + "입니다")
 
         elif args.mode == 'set':
-            permissions.set_permission_level(args.type, args.id, args.level)
+            permission_group.objects.update_or_create(args.id, defaults={'id': args.id, 'level': args.level})
             await msg.channel.send("해당 권한 레벨을 " + str(args.level) + "로 설정했습니다")
-
-            if IS_TESTING:
-                await msg.channel.send("테스트 중이라 새 권한 정보는 유실될 거예요!")
-                return ECommandExecuteResult.SUCCESS, "(was testing)"
 
         else:
             raise

@@ -126,10 +126,10 @@ class CommandHangman(Command):
     def __init__(self):
         super().__init__()
 
-        self.stat_file_name = "database/hangman_stats.pickle"
-        self.session_file_name = "database/hangman_sessions.pickle"
+        self.stat_file_name = "data/hangman_stats.pickle"
+        self.session_file_name = "data/hangman_sessions.pickle"
 
-        with open('database/hangman_words.txt') as word_file:
+        with open('data/hangman_words.txt') as word_file:
             self.words = [word.strip() for word in word_file.readlines()]
 
         self.sessions = load_data(self.session_file_name, {})  # user id : [msg id, game]

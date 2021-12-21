@@ -11,6 +11,9 @@ from helper_functions import *
 
 class ActionHangmanGuess(Action):
     async def on_message(self, msg: Message, **kwargs):
+        if msg.author.bot:
+            return EActionExecuteResult.NO_MATCH
+
         c = msg.content.lower().strip()
         if len(c) != 1 or c not in "abcdefghijklmnopqrstuvwxyz":
             return EActionExecuteResult.NO_MATCH

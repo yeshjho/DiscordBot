@@ -1,5 +1,7 @@
 from commands.command import *
 
+from helper_functions import *
+
 
 class CommandKill(Command):
     """

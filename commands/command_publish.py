@@ -2,6 +2,8 @@ from commands.command import *
 
 import nextcord.utils
 
+from constants import *
+
 
 class CommandPublish(Command):
     """

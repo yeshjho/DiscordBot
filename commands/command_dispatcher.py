@@ -1,4 +1,5 @@
 import argparse
+from django.core.exceptions import ObjectDoesNotExist
 from importlib import import_module
 from glob import glob
 
@@ -7,6 +8,8 @@ from nextcord import Message
 from commands.command import CommandExecuteError
 from helper_functions import *
 from logger import *
+
+import db_models.common.models as models
 
 commands = []
 
@@ -37,50 +40,74 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         return
 
     command_str = alias_map.get(command_str, command_str)
-    if command_str in commands_map:
-        Logger.log("Executing command:", command_str, "with", msg.content)
+    if command_str not in commands_map:
+        await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
+        return
 
-        command = commands_map[command_str]
+    user, _ = models.User.objects.get_or_create(id=msg.author.id)
+    permission_levels = [models.UserPermission.objects.get_or_create(id=user.id)[0].level]
+    kwargs["user"] = user
 
-        parser = NonExitingArgumentParser(add_help=False)
-        command.fill_arg_parser(parser)
-
-        additional_args = []
-        additional_kwargs = {}
+    if msg.guild:
+        guild, _ = models.Guild.objects.get_or_create(id=msg.guild.id)
         try:
-            args_namespace, _ = parser.parse_known_args(args)
-        except argparse.ArgumentError:
-            return_value = ECommandExecuteResult.SYNTAX_ERROR
-        else:
-            try:
-                return_value = await command.execute(msg, args_namespace, **kwargs)
-            except CommandExecuteError as err:
-                return_value = ECommandExecuteResult.CUSTOM_ERROR
-                additional_args = err.args
-                additional_kwargs = err.kwargs
-
-        if type(return_value) is tuple:
-            additional_args = return_value[1:]
-            return_value = return_value[0]
-
-        if return_value == ECommandExecuteResult.SUCCESS:
+            permission_levels.append(models.GuildPermission.objects.get(id=guild.id).level)
+        except ObjectDoesNotExist:
             pass
+        kwargs['guild'] = guild
 
-        elif return_value == ECommandExecuteResult.NO_PERMISSION:
-            await msg.channel.send(mention_user(msg.author) + " 이 명령어를 실행할 권한이 없습니다!")
+        roles = []
+        for role in msg.author.roles:
+            role_, _ = models.Role.objects.get_or_greate(id=role.id, guild=guild)
+            roles.append(role_)
+            try:
+                permission_levels.append(models.RolePermission.objects.get(id=role.id).level)
+            except ObjectDoesNotExist:
+                pass
+        kwargs['roles'] = roles
 
-        elif return_value == ECommandExecuteResult.SYNTAX_ERROR:
-            fake_namespace = argparse.Namespace()
-            fake_namespace.__setattr__('command', command_str)
-            await commands_map['help'].execute(msg, fake_namespace, **kwargs)
+    kwargs['permission_level'] = max(permission_levels)
 
-        elif return_value == ECommandExecuteResult.CUSTOM_ERROR:
-            await command.on_custom_error(msg, *additional_args, **additional_kwargs)
+    Logger.log("Executing command:", command_str, "with", msg.content)
 
-        else:
-            raise
+    command = commands_map[command_str]
 
-        log_command(command_str, msg, return_value, additional_args)
+    parser = NonExitingArgumentParser(add_help=False)
+    command.fill_arg_parser(parser)
+
+    additional_args = []
+    additional_kwargs = {}
+    try:
+        args_namespace, _ = parser.parse_known_args(args)
+    except argparse.ArgumentError:
+        return_value = ECommandExecuteResult.SYNTAX_ERROR
+    else:
+        try:
+            return_value = await command.execute(msg, args_namespace, **kwargs)
+        except CommandExecuteError as err:
+            return_value = ECommandExecuteResult.CUSTOM_ERROR
+            additional_args = err.args
+            additional_kwargs = err.kwargs
+
+    if type(return_value) is tuple:
+        additional_args = return_value[1:]
+        return_value = return_value[0]
+
+    if return_value == ECommandExecuteResult.SUCCESS:
+        pass
+
+    elif return_value == ECommandExecuteResult.NO_PERMISSION:
+        await msg.channel.send(mention_user(msg.author) + " 이 명령어를 실행할 권한이 없습니다!")
+
+    elif return_value == ECommandExecuteResult.SYNTAX_ERROR:
+        fake_namespace = argparse.Namespace()
+        fake_namespace.__setattr__('command', command_str)
+        await commands_map['help'].execute(msg, fake_namespace, **kwargs)
+
+    elif return_value == ECommandExecuteResult.CUSTOM_ERROR:
+        await command.on_custom_error(msg, *additional_args, **additional_kwargs)
 
     else:
-        await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
+        raise
+
+    log_command(command_str, msg, return_value, additional_args)

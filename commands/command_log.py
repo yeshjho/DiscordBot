@@ -2,6 +2,8 @@ from commands.command import *
 
 import datetime
 
+from helper_functions import *
+
 
 class CommandLog(Command):
     """

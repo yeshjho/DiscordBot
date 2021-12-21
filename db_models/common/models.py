@@ -1,10 +1,33 @@
-from django.db import models
+from db_models.base_model import *
 
 
-class User(models.Model):
+class User(BaseModel):
     id = models.IntegerField(primary_key=True)
-    permission = models.IntegerField(default=0)
 
 
-class Message(models.Model):
+class Guild(BaseModel):
+    id = models.IntegerField(primary_key=True)
+
+
+class Role(BaseModel):
+    id = models.IntegerField(primary_key=True)
+    Guild = models.ForeignKey(Guild, on_delete=models.CASCADE, related_name='guilds')
+
+
+class UserPermission(BaseModel):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True, related_name='permission')
+    level = models.IntegerField(default=0)
+
+
+class GuildPermission(BaseModel):
+    guild = models.OneToOneField(Guild, on_delete=models.CASCADE, primary_key=True, related_name='permission')
+    level = models.IntegerField(default=0)
+
+
+class RolePermission(BaseModel):
+    role = models.OneToOneField(Role, on_delete=models.CASCADE, primary_key=True, related_name='permission')
+    level = models.IntegerField(default=0)
+
+
+class Message(BaseModel):
     id = models.IntegerField(primary_key=True)

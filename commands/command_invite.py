@@ -1,5 +1,7 @@
 from commands.command import *
 
+from constants import *
+
 
 class CommandInvite(Command):
     """

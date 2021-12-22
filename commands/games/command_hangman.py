@@ -31,7 +31,6 @@ class CommandHangman(Command):
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        from db_models.common.models import User
         from db_models.hangman.models import HangmanGame, HangmanSession
         from db_models.words.models import EnglishWord
 
@@ -40,11 +39,11 @@ class CommandHangman(Command):
         if args.stat:
             games = HangmanGame.objects.filter(hangman_session=None, user__id=author_id)
             lost = games.filter(state=HangmanGame.HANGMAN_PARTS)
-            perfect_count = games.filter(state=0)
+            perfect_count = games.filter(state=0).count()
             total_count = games.count()
             lose_count = lost.count()
             win_count = total_count - lose_count
-            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)\n퍼펙트 게임: {} ({:.2f}%)".format(
+            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)\n완승: {} ({:.2f}%)".format(
                 mention_user(msg.author), win_count, lose_count,
                 0 if total_count == 0 else win_count / total_count * 100,
                 perfect_count, 0 if total_count == 0 else perfect_count / total_count * 100

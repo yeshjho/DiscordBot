@@ -111,7 +111,7 @@ class HangmanGame(BaseModel):
         self.guesses += c
         self.save()
 
-        if c not in self.word:
+        if c not in self.word.word:
             self.state += 1
             self.save()
             if self.state == HangmanGame.HANGMAN_PARTS:

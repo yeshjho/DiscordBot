@@ -1,8 +1,5 @@
 from nextcord import Member, Embed
 
-from os.path import isfile
-import pickle
-
 from constants import *
 
 
@@ -34,21 +31,3 @@ async def send_split(channel, msg: str, prefix: str = '', suffix: str = ''):
     frag_size = TEXT_LENGTH_LIMIT - len(prefix) - len(suffix)
     for result_split in [msg[i:i + frag_size] for i in range(0, len(msg), frag_size)]:
         await channel.send(prefix + result_split + suffix)
-
-
-def is_method_overriden(parent_object, child_object, method_name: str) -> bool:
-    return parent_object.__getattribute__(method_name).__code__ is not \
-           child_object.__getattribute__(method_name).__code__
-
-
-def load_data(file_name: str, default_value=None):
-    if isfile(file_name):
-        with open(file_name, "rb") as file:
-            return pickle.load(file)
-    else:
-        return default_value
-
-
-def save_data(file_name: str, obj):
-    with open(file_name, "wb") as file:
-        pickle.dump(obj, file)

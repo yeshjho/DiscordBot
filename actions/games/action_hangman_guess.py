@@ -45,7 +45,7 @@ class ActionHangmanGuess(Action):
         else:
             await game_msg.edit(content=game.get_msg())
 
-        dict_link = 'http://endic.naver.com/search.nhn?query={}'.format(game.word)
+        dict_link = 'http://endic.naver.com/search.nhn?query={}'.format(game.word.word)
         soup = BeautifulSoup(requests.get(dict_link).content, "lxml")
         try:
             meaning = soup.find('dl', {'class': 'list_e2'}).find('dd').find('span', {'class': 'fnt_k05'}).get_text()
@@ -57,7 +57,7 @@ class ActionHangmanGuess(Action):
 
         elif guess_result == EGuessResult.LOSE:
             await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}\n{}".format(
-                mention_user(msg.author), game.word, meaning, dict_link))
+                mention_user(msg.author), game.word.word, meaning, dict_link))
             session.finish()
             return author_id, "guessed letter", c, "and lost"
 

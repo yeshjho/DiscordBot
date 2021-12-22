@@ -34,7 +34,7 @@ class Scheduler:
 
     @staticmethod
     def schedule(func, name: str, start_at: datetime, every: timedelta = timedelta.min, *args, **kwargs):
-        new_schedule = Scheduler.Schedule(func, name, every, args, kwargs)
+        new_schedule = Scheduler.Schedule(func, name, every, *args, **kwargs)
         new_schedule.next_execute_timestamp = start_at
         Scheduler.schedules[name] = new_schedule
 

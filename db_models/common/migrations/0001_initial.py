@@ -33,15 +33,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='Message',
-            fields=[
-                ('id', models.IntegerField(primary_key=True, serialize=False)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
             name='Role',
             fields=[
                 ('id', models.BigIntegerField(primary_key=True, serialize=False)),

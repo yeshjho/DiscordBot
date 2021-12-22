@@ -27,7 +27,3 @@ class GuildPermission(BaseModel):
 class RolePermission(BaseModel):
     role = models.OneToOneField(Role, on_delete=models.CASCADE, primary_key=True, related_name='permission')
     level = models.IntegerField(default=0)
-
-
-class Message(BaseModel):
-    id = models.IntegerField(primary_key=True)

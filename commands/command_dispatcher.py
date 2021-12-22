@@ -68,6 +68,8 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
 
     kwargs['permission_level'] = max(permission_levels)
 
+    Logger.log("Executing command:", command_str, "with", msg.content)
+
     command = commands_map[command_str]
 
     parser = NonExitingArgumentParser(add_help=False)

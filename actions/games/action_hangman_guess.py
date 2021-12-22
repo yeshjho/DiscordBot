@@ -59,10 +59,10 @@ class ActionHangmanGuess(Action):
             await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}\n{}".format(
                 mention_user(msg.author), game.word, meaning, dict_link))
             session.finish()
-            return author_id, "lost"
+            return author_id, "guessed letter", c, "and lost"
 
         elif guess_result == EGuessResult.WIN:
             await msg.channel.send("{} 축하드립니다! 정답을 맞히셨습니다!\n{}\n{}".format(
                 mention_user(msg.author), meaning, dict_link))
             session.finish()
-            return author_id, "won"
+            return author_id, "guessed letter", c, "and won"

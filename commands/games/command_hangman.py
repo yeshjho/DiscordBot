@@ -40,15 +40,18 @@ class CommandHangman(Command):
         if args.stat:
             games = HangmanGame.objects.filter(hangman_session=None, user__id=author_id)
             lost = games.filter(state=HangmanGame.HANGMAN_PARTS)
+            perfect_count = games.filter(state=0)
+            total_count = games.count()
             lose_count = lost.count()
-            win_count = games.cound() - lose_count
-            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)".format(
+            win_count = total_count - lose_count
+            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)\n퍼펙트 게임: {} ({:.2f}%)".format(
                 mention_user(msg.author), win_count, lose_count,
-                0 if win_count + lose_count == 0 else win_count / (win_count + lose_count) * 100))
+                0 if total_count == 0 else win_count / total_count * 100,
+                perfect_count, 0 if total_count == 0 else perfect_count / total_count * 100
+            ))
 
             return
 
-        user = User.objects.get(id=author_id)
         try:
             session = HangmanSession.objects.get(user__id=author_id)
         except ObjectDoesNotExist:
@@ -57,10 +60,10 @@ class CommandHangman(Command):
                 word = EnglishWord.objects.get(pk=randint(1, word_count))
                 if len(word.word) >= CommandHangman.MIN_WORD_LENGTH:
                     break
-            game = HangmanGame(user=user, word=word)
+            game = HangmanGame(user_id=author_id, word=word)
             game.save()
             msg_id = (await msg.channel.send(game.get_msg())).id
-            session = HangmanSession(user=user, game=game, msg_id=msg_id)
+            session = HangmanSession(user_id=author_id, game=game, msg_id=msg_id)
             session.save()
 
             return ECommandExecuteResult.SUCCESS, "word =", word.word

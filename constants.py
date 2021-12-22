@@ -3,7 +3,7 @@ import os
 OWNER_ID = 353886187879923712
 INVITE_LINK = "https://discord.com/oauth2/authorize?client_id=622425177103269899&permissions=8&scope=bot"
 COMMAND_PREFIX = '`'
-VERSION = '2.0.0'
+VERSION = '2.0.1'
 TEXT_LENGTH_LIMIT = 2000
 IS_TESTING = os.getenv('DISCORD_BOT_IS_TESTING', 'False') == 'True'
 PUBLISH_GUILD_ID = 854748691181076490

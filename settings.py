@@ -13,7 +13,7 @@ DATABASES = {
         'PASSWORD': os.getenv('DISCORD_BOT_DJANGO_PASSWORD'),
 
         'OPTIONS': {
-            'driver': "SQL Server Native Client 11.0",
+            'driver': "ODBC Driver 17 for SQL Server",
             'unicode_results': True,
             'connection_timeout': 60,
             'query_timeout': 60

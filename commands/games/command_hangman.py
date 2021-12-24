@@ -38,16 +38,19 @@ class CommandHangman(Command):
 
         if args.stat:
             games = HangmanGame.objects.filter(hangman_session=None, user__id=author_id)
-            lost = games.filter(state=HangmanGame.HANGMAN_PARTS)
-            perfect_count = games.filter(state=0).count()
             total_count = games.count()
-            lose_count = lost.count()
+            lose_count = games.filter(state=HangmanGame.HANGMAN_PARTS).count()
             win_count = total_count - lose_count
-            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)\n완승: {} ({:.2f}%)".format(
-                mention_user(msg.author), win_count, lose_count,
-                0 if total_count == 0 else win_count / total_count * 100,
-                perfect_count, 0 if total_count == 0 else perfect_count / total_count * 100
-            ))
+            perfect_count = games.filter(state=0).count()
+            almost_lost_count = games.filter(state=5).count()
+            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)\n완승: {} ({:.2f}%)\n기사회생: {} ({:.2f})"
+                .format(
+                    mention_user(msg.author), win_count, lose_count,
+                    0 if total_count == 0 else win_count / total_count * 100,
+                    perfect_count, 0 if total_count == 0 else perfect_count / total_count * 100,
+                    almost_lost_count, 0 if total_count == 0 else almost_lost_count / total_count * 100
+                )
+            )
 
             return
 

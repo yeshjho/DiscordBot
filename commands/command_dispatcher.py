@@ -33,8 +33,6 @@ class NonExitingArgumentParser(argparse.ArgumentParser):
 
 
 async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
-    import db_models.common.models as models
-
     if IS_TESTING and msg.author.id != OWNER_ID:
         await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!", delete_after=1)
         return
@@ -44,29 +42,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
         return
 
-    user, _ = models.User.objects.get_or_create(id=msg.author.id)
-    permission_levels = [models.UserPermission.objects.get_or_create(user=user)[0].level]
-    kwargs["user"] = user
-
-    if msg.guild:
-        guild, _ = models.Guild.objects.get_or_create(id=msg.guild.id)
-        try:
-            permission_levels.append(models.GuildPermission.objects.get(guild__id=guild.id).level)
-        except ObjectDoesNotExist:
-            pass
-        kwargs['guild'] = guild
-
-        roles = []
-        for role in msg.author.roles:
-            role_, _ = models.Role.objects.get_or_create(id=role.id, guild=guild)
-            roles.append(role_)
-            try:
-                permission_levels.append(models.RolePermission.objects.get(role__id=role.id).level)
-            except ObjectDoesNotExist:
-                pass
-        kwargs['roles'] = roles
-
-    kwargs['permission_level'] = max(permission_levels)
+    kwargs['permission_level'] = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
 
     Logger.log("Executing command:", command_str, "with", msg.content)
 

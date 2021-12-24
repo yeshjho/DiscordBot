@@ -1,5 +1,7 @@
 from nextcord import Member, Embed
 
+from typing import List
+
 from constants import *
 
 
@@ -31,3 +33,32 @@ async def send_split(channel, msg: str, prefix: str = '', suffix: str = ''):
     frag_size = TEXT_LENGTH_LIMIT - len(prefix) - len(suffix)
     for result_split in [msg[i:i + frag_size] for i in range(0, len(msg), frag_size)]:
         await channel.send(prefix + result_split + suffix)
+
+
+def get_permission_level(user_id: int, guild_id: int = None, role_ids: List[int] = None):
+    from db_models.common import models
+    from django.core.exceptions import ObjectDoesNotExist
+
+    if role_ids is None:
+        role_ids = []
+
+    user, _ = models.User.objects.get_or_create(id=user_id)
+    permission_levels = [models.UserPermission.objects.get_or_create(user=user)[0].level]
+
+    if guild_id:
+        guild, _ = models.Guild.objects.get_or_create(id=guild_id)
+        try:
+            permission_levels.append(models.GuildPermission.objects.get(guild__id=guild_id).level)
+        except ObjectDoesNotExist:
+            pass
+
+        roles = []
+        for role_id in role_ids:
+            role_, _ = models.Role.objects.get_or_create(id=role_id, guild=guild)
+            roles.append(role_)
+            try:
+                permission_levels.append(models.RolePermission.objects.get(role__id=role_id).level)
+            except ObjectDoesNotExist:
+                pass
+
+    return max(permission_levels)

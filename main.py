@@ -22,8 +22,8 @@ def dispatch_action():
 
 
 class DiscordBot(nextcord.Client):
-    def __init__(self):
-        super().__init__(activity=Game(name="`help" if not IS_TESTING else "테스트"))
+    def __init__(self, **kwargs):
+        super().__init__(activity=Game(name="`help" if not IS_TESTING else "테스트"), **kwargs)
 
         self.emoji_cache_guilds = None
 
@@ -41,7 +41,6 @@ class DiscordBot(nextcord.Client):
 
     @dispatch_action()
     async def on_ready(self):
-        print("Ready!")
         self.emoji_cache_guilds = list(filter(lambda x: x.name == "yeshjho_emoji1님의 서버", self.guilds))
 
         if RESET_CACHE_EMOJIS:
@@ -54,6 +53,8 @@ class DiscordBot(nextcord.Client):
 
         schedule_initial(main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
                          alias_map=alias_map)
+
+        print("Ready!")
 
     @dispatch_action()
     async def on_message(self, msg: nextcord.Message):
@@ -73,7 +74,8 @@ if __name__ == "__main__":
 
     django_app = get_wsgi_application()
 
-    discord_bot = DiscordBot()
+    intents = nextcord.Intents.all()
+    discord_bot = DiscordBot(intents=intents)
     loop = asyncio.get_event_loop()
     discord_bot.loop.create_task(Scheduler.main_loop())
     try:

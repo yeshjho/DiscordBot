@@ -41,8 +41,6 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
         return
 
-    kwargs['permission_level'] = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
-
     Logger.log("Executing command:", command_str, "with", msg.content)
 
     command = commands_map[command_str]
@@ -58,6 +56,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         return_value = ECommandExecuteResult.SYNTAX_ERROR
     else:
         try:
+            args_namespace.permission_level = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
             return_value = await command.execute(msg, args_namespace, **kwargs)
         except CommandExecuteError as err:
             return_value = ECommandExecuteResult.CUSTOM_ERROR

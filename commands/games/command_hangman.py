@@ -16,6 +16,7 @@ class CommandHangman(Command):
     """
 
     MIN_WORD_LENGTH = 4
+    TOP_RANK_LIMIT = 5
 
     def __init__(self):
         super().__init__()
@@ -28,37 +29,86 @@ class CommandHangman(Command):
 
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
         parser.add_argument('stat', nargs='?', choices=['stat', 's', '전적', '스탯'], default=None)
+        parser.add_argument('nick', nargs='?', default=None)
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         from db_models.hangman.models import HangmanGame, HangmanSession
         from db_models.words.models import EnglishWord
 
-        author_id = msg.author.id
+        if args.nick:
+            if args.permission_level < 1:
+                return ECommandExecuteResult.NO_PERMISSION
+
+            if args.nick.isnumeric():
+                target_user_id = int(args.nick)
+            elif args.nick.startswith("<@!") and args.nick.endswith('>'):
+                target_user_id = int(args.nick[3:-1])
+            else:
+                candidates = list(filter(lambda x: not x.bot and x.display_name == args.nick,
+                                         await msg.guild.fetch_members().flatten()))
+                if not candidates:
+                    return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
+                target_user_id = candidates[0].id
+        else:
+            target_user_id = msg.author.id
+
+        user = await msg.guild.fetch_member(target_user_id)
 
         if args.stat:
-            games = HangmanGame.objects.filter(hangman_session=None, user__id=author_id)
-
+            games = HangmanGame.objects.filter(hangman_session=None, user__id=user.id)
             total_count = games.count()
+            if total_count == 0:
+                await msg.channel.send(user.display_name + "님은 아직 플레이한 적이 없습니다.")
+                return
+
             lose_count = games.filter(state=HangmanGame.HANGMAN_PARTS).count()
             win_count = total_count - lose_count
             perfect_count = games.filter(state=0).count()
             almost_lost_count = games.filter(state=5).count()
 
-            win_rate = 0 if total_count == 0 else win_count / total_count * 100
-            perfect_rate = 0 if total_count == 0 else perfect_count / total_count * 100
-            almost_lost_rate = 0 if total_count == 0 else almost_lost_count / total_count * 100
+            win_rate = win_count / total_count * 100
 
-            embed = get_embed("{}님의 행맨 전적".format(msg.author.nick))
-            embed.add_field(name="{}승 {}패".format(win_count, lose_count),
-                            value="승률 {:.2f}%".format(win_rate),
+            times_used = {}
+            right_count = {}
+            wrong_count = {}
+            crush_count = 0
+            for game in games:
+                if game.state == HangmanGame.HANGMAN_PARTS and all([c not in game.word.word for c in game.guesses]):
+                    crush_count += 1
+                for c in game.guesses:
+                    times_used[c] = times_used.get(c, 0) + 1
+                    count_to_add = right_count if c in game.word.word else wrong_count
+                    count_to_add[c] = count_to_add.get(c, 0) + 1
+
+            right_count = sorted(right_count.items(), key=lambda e: e[1] / times_used[e[0]],
+                                 reverse=True)[:CommandHangman.TOP_RANK_LIMIT]
+            wrong_count = sorted(wrong_count.items(), key=lambda e: e[1] / times_used[e[0]],
+                                 reverse=True)[:CommandHangman.TOP_RANK_LIMIT]
+            times_used_top = sorted(times_used.items(), key=lambda e: e[1],
+                                    reverse=True)[:CommandHangman.TOP_RANK_LIMIT]
+
+            embed = get_embed("{}님의 행맨 전적".format(user.display_name))
+            embed.colour = round((100 - win_rate) / 100 * 255) * 16 ** 4 + round(win_rate / 100 * 255)
+            embed.set_image(url='https://i.imgur.com/Yj6Wsqp.png')  # force full width
+            embed.add_field(name="{}승 {}패".format(win_count, lose_count), value="승률 {:.2f}%".format(win_rate),
                             inline=False)
-            embed.add_field(name="완승", value="{} ({:.2f}%)".format(perfect_count, perfect_rate), inline=False)
-            embed.add_field(name="기사회생", value="{} ({:.2f}%)".format(almost_lost_count, almost_lost_rate), inline=False)
+            embed.add_field(name="완승", value="`{}` ({:.2f}%)".format(perfect_count, perfect_count / total_count * 100))
+            embed.add_field(name="참패", value="`{}` ({:.2f}%)".format(crush_count, crush_count / total_count * 100))
+            embed.add_field(name="기사회생", value="`{}` ({:.2f}%)".format(almost_lost_count, almost_lost_count / total_count * 100))
+            embed.add_field(name='사용률 Top {}'.format(CommandHangman.TOP_RANK_LIMIT),
+                            value="\n".join(["`{}`: {}".format(e[0], e[1]) for e in times_used_top]))
+            embed.add_field(name='정답률 Top {}'.format(CommandHangman.TOP_RANK_LIMIT),
+                            value="\n".join(["`{}`: {:.2f}% ({}/{})".format(e[0], e[1] / times_used[e[0]] * 100, e[1],
+                                                                            times_used[e[0]]) for e in right_count]))
+            embed.add_field(name='오답률 Top {}'.format(CommandHangman.TOP_RANK_LIMIT),
+                            value="\n".join(["`{}`: {:.2f}% ({}/{})".format(e[0], e[1] / times_used[e[0]] * 100, e[1],
+                                                                            times_used[e[0]]) for e in wrong_count]))
             await msg.channel.send(embed=embed)
 
             return
 
+        author_id = msg.author.id
         try:
             session = HangmanSession.objects.get(user__id=author_id)
         except ObjectDoesNotExist:

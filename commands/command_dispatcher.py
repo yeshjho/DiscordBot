@@ -1,5 +1,4 @@
 import argparse
-from django.core.exceptions import ObjectDoesNotExist
 from importlib import import_module
 from glob import glob
 

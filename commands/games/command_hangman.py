@@ -38,19 +38,24 @@ class CommandHangman(Command):
 
         if args.stat:
             games = HangmanGame.objects.filter(hangman_session=None, user__id=author_id)
+
             total_count = games.count()
             lose_count = games.filter(state=HangmanGame.HANGMAN_PARTS).count()
             win_count = total_count - lose_count
             perfect_count = games.filter(state=0).count()
             almost_lost_count = games.filter(state=5).count()
-            await msg.channel.send("{}님의 행맨 전적: {}승 {}패 (승률 {:.2f}%)\n완승: {} ({:.2f}%)\n기사회생: {} ({:.2f})"
-                .format(
-                    mention_user(msg.author), win_count, lose_count,
-                    0 if total_count == 0 else win_count / total_count * 100,
-                    perfect_count, 0 if total_count == 0 else perfect_count / total_count * 100,
-                    almost_lost_count, 0 if total_count == 0 else almost_lost_count / total_count * 100
-                )
-            )
+
+            win_rate = 0 if total_count == 0 else win_count / total_count * 100
+            perfect_rate = 0 if total_count == 0 else perfect_count / total_count * 100
+            almost_lost_rate = 0 if total_count == 0 else almost_lost_count / total_count * 100
+
+            embed = get_embed("{}님의 행맨 전적".format(mention_user(msg.author)))
+            embed.add_field(name="{}승 {}패".format(win_count, lose_count),
+                            value="승률 {:.2f}%".format(win_rate),
+                            inline=False)
+            embed.add_field(name="완승", value="{} ({:.2f}%)".format(perfect_count, perfect_rate), inline=False)
+            embed.add_field(name="기사회생", value="{} ({:.2f}%)".format(almost_lost_count, almost_lost_rate), inline=False)
+            await msg.channel.send(embed=embed)
 
             return
 

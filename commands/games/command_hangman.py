@@ -49,7 +49,7 @@ class CommandHangman(Command):
             perfect_rate = 0 if total_count == 0 else perfect_count / total_count * 100
             almost_lost_rate = 0 if total_count == 0 else almost_lost_count / total_count * 100
 
-            embed = get_embed("{}님의 행맨 전적".format(mention_user(msg.author)))
+            embed = get_embed("{}님의 행맨 전적".format(msg.author.nick))
             embed.add_field(name="{}승 {}패".format(win_count, lose_count),
                             value="승률 {:.2f}%".format(win_rate),
                             inline=False)

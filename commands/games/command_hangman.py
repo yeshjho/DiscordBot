@@ -74,7 +74,7 @@ class CommandHangman(Command):
             wrong_count = {}
             crush_count = 0
             for game in games:
-                if game.state == HangmanGame.HANGMAN_PARTS and all([c not in game.word.word for c in game.guesses]):
+                if game.state == HangmanGame.HANGMAN_PARTS and all((c not in game.word.word for c in game.guesses)):
                     crush_count += 1
                 for c in game.guesses:
                     times_used[c] = times_used.get(c, 0) + 1
@@ -88,14 +88,20 @@ class CommandHangman(Command):
             times_used_top = sorted(times_used.items(), key=lambda e: e[1],
                                     reverse=True)[:CommandHangman.TOP_RANK_LIMIT]
 
+            average_state = sum([game.state % HangmanGame.HANGMAN_PARTS for game in games]) / win_count
+            average_word_length = sum([len(game.word.word) for game in games]) / total_count
+
             embed = get_embed("{}님의 행맨 전적".format(user.display_name))
             embed.colour = round((100 - win_rate) / 100 * 255) * 16 ** 4 + round(win_rate / 100 * 255)
             embed.set_image(url='https://i.imgur.com/Yj6Wsqp.png')  # force full width
-            embed.add_field(name="{}승 {}패".format(win_count, lose_count), value="승률 {:.2f}%".format(win_rate),
-                            inline=False)
+            embed.add_field(name="{}승 {}패".format(win_count, lose_count), value="승률 `{:.2f}%`".format(win_rate))
+            embed.add_field(name="승리 시 평균 행맨 진행도", value="`{:.2f}`".format(average_state))
+            embed.add_field(name='평균 단어 길이', value='`{:.2f}`'.format(average_word_length))
+
             embed.add_field(name="완승", value="`{}` ({:.2f}%)".format(perfect_count, perfect_count / total_count * 100))
             embed.add_field(name="참패", value="`{}` ({:.2f}%)".format(crush_count, crush_count / total_count * 100))
             embed.add_field(name="기사회생", value="`{}` ({:.2f}%)".format(almost_lost_count, almost_lost_count / total_count * 100))
+
             embed.add_field(name='사용률 Top {}'.format(CommandHangman.TOP_RANK_LIMIT),
                             value="\n".join(["`{}`: {}".format(e[0], e[1]) for e in times_used_top]))
             embed.add_field(name='정답률 Top {}'.format(CommandHangman.TOP_RANK_LIMIT),

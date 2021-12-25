@@ -55,14 +55,18 @@ class ActionHangmanGuess(Action):
         if guess_result == EGuessResult.NORMAL:
             return author_id, "guessed letter", c
 
-        elif guess_result == EGuessResult.LOSE:
-            await msg.channel.send("{} 안타깝네요! 정답은 `{}`였습니다!\n{}\n{}".format(
-                mention_user(msg.author), game.word.word, meaning, dict_link))
-            session.finish()
-            return author_id, "guessed letter", c, "and lost"
-
+        embed = Embed(title="{}님의 행맨 결과".format(msg.author.display_name))
+        to_return = None
+        if guess_result == EGuessResult.LOSE:
+            embed.colour = 0xFF0000
+            embed.add_field(name='패배', value='안타깝네요! 정답은 `{}`였습니다!'.format(game.word.word))
+            to_return = "and lost"
         elif guess_result == EGuessResult.WIN:
-            await msg.channel.send("{} 축하드립니다! 정답을 맞히셨습니다!\n{}\n{}".format(
-                mention_user(msg.author), meaning, dict_link))
-            session.finish()
-            return author_id, "guessed letter", c, "and won"
+            embed.colour = 0x0000FF
+            embed.add_field(name='승리', value='축하드립니다! 정답을 맞히셨습니다!')
+            to_return = "and won"
+
+        session.finish()
+        embed.add_field(name=meaning, value=dict_link, inline=False)
+        await msg.channel.send(embed=embed)
+        return author_id, "guessed letter", c, to_return

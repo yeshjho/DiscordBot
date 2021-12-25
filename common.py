@@ -16,3 +16,6 @@ class EPermissionLevel:
     DEFAULT = 0
     ADMIN = 10000
     OWNER = 2147483647
+
+
+EMPTY_CHAR = '\u200b'

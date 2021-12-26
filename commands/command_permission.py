@@ -42,7 +42,7 @@ class CommandPermission(Command):
                                    + str(UserPermission.objects.get(user__id=msg.author.id).level) + "입니다")
             return
 
-        if kwargs['permission_level'] < EPermissionLevel.ADMIN:
+        if args.permission_level < EPermissionLevel.ADMIN:
             return ECommandExecuteResult.NO_PERMISSION
 
         if args.type == 'user':

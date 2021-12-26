@@ -56,7 +56,7 @@ class CommandPermission(Command):
             group = Role
 
         try:
-            user_id = get_user_id(args.id, msg.guild)
+            user_id = await get_user_id(args.id, msg.guild)
         except MultipleUserException:
             return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
 

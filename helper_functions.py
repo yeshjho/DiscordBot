@@ -68,7 +68,7 @@ class MultipleUserException(Exception):
     pass
 
 
-def get_user_id(nick_or_mention_or_id, guild=None) -> int or List[int]:
+async def get_user_id(nick_or_mention_or_id, guild=None) -> int or List[int]:
     if nick_or_mention_or_id.isnumeric():
         return int(nick_or_mention_or_id)
     elif nick_or_mention_or_id.startswith("<@!") and nick_or_mention_or_id.endswith('>'):

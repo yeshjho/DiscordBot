@@ -42,7 +42,7 @@ class CommandHangman(Command):
                 return ECommandExecuteResult.NO_PERMISSION
             else:
                 try:
-                    target_user_id = get_user_id(args.nick, msg.guild)
+                    target_user_id = await get_user_id(args.nick, msg.guild)
                 except MultipleUserException:
                     return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
         else:

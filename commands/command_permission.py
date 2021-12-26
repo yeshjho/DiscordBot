@@ -6,10 +6,10 @@ from helper_functions import *
 
 class CommandPermission(Command):
     """
-    [<get|set> <user|guild|role> <id> [level]]
+    [<get|set> <user|guild|role> <id or nick> [level]]
     권한 레벨을 조회/설정
     아무 인자도 없으면 자신의 권한 레벨을 조회합니다.
-    get이면 있으면 해당 id의 유저/서버/역할의 레벨을 조회합니다. set이면 level로 설정합니다.
+    get이면 해당 id의 유저/서버/역할의 레벨을 조회합니다. set이면 level로 설정합니다.
     """
 
     def __init__(self):
@@ -26,11 +26,11 @@ class CommandPermission(Command):
 
         get_parser = subparsers.add_parser('get')
         get_parser.add_argument('type', choices=['user', 'guild', 'role'])
-        get_parser.add_argument('id', type=int)
+        get_parser.add_argument('id')
 
         set_parser = subparsers.add_parser('set')
         set_parser.add_argument('type', choices=['user', 'guild', 'role'])
-        set_parser.add_argument('id', type=int)
+        set_parser.add_argument('id')
         set_parser.add_argument('level', type=int)
 
     @execute_condition_checker()
@@ -55,10 +55,15 @@ class CommandPermission(Command):
             permission_group = RolePermission
             group = Role
 
+        try:
+            user_id = get_user_id(args.id, msg.guild)
+        except MultipleUserException:
+            return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
+
         if args.mode == 'get':
             level = None
             try:
-                level = permission_group.objects.get(**{args.type + '__id': args.id}).level
+                level = permission_group.objects.get(**{args.type + '__id': user_id}).level
             except ObjectDoesNotExist:
                 pass
             await msg.channel.send("해당하는 권한 레벨이 없습니다" if level is None else "해당 권한 레벨은 " + str(level) + "입니다")
@@ -66,10 +71,10 @@ class CommandPermission(Command):
         elif args.mode == 'set':
             if args.type == 'role':
                 guild, _ = Guild.objects.get_or_create(id=msg.author.guild.id)
-                group, _ = group.objects.get_or_create(id=args.id, guild=guild)
+                group, _ = group.objects.get_or_create(id=user_id, guild=guild)
             else:
-                group, _ = group.objects.get_or_create(id=args.id)
-            permission_group.objects.update_or_create(**{args.type + '__id': args.id},
+                group, _ = group.objects.get_or_create(id=user_id)
+            permission_group.objects.update_or_create(**{args.type + '__id': user_id},
                                                       defaults={args.type: group, 'level': args.level})
             await msg.channel.send("해당 권한 레벨을 " + str(args.level) + "로 설정했습니다")
 

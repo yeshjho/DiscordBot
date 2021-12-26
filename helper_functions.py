@@ -62,3 +62,22 @@ def get_permission_level(user_id: int, guild_id: int = None, role_ids: List[int]
                 pass
 
     return max(permission_levels)
+
+
+class MultipleUserException(Exception):
+    pass
+
+
+def get_user_id(nick_or_mention_or_id, guild=None) -> int or List[int]:
+    if nick_or_mention_or_id.isnumeric():
+        return int(nick_or_mention_or_id)
+    elif nick_or_mention_or_id.startswith("<@!") and nick_or_mention_or_id.endswith('>'):
+        return int(nick_or_mention_or_id[3:-1])
+    elif guild:
+        candidates = list(filter(lambda x: not x.bot and x.display_name == nick_or_mention_or_id,
+                                 await guild.fetch_members().flatten()))
+        if len(candidates) != 1:
+            raise MultipleUserException()
+        return candidates[0].id
+    else:
+        raise

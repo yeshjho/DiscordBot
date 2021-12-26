@@ -10,9 +10,10 @@ from helper_functions import *
 
 class CommandHangman(Command):
     """
-    [stat]
+    [stat] [id or nick]
     행맨 게임
     행맨 게임을 시작합니다. stat이 있으면 그 대신 전적을 보여줍니다.
+    id 또는 nick이 있으면 해당 유저의 전적을 보여줍니다.
     """
 
     MIN_WORD_LENGTH = 4
@@ -39,17 +40,11 @@ class CommandHangman(Command):
         if args.nick:
             if args.permission_level < 1:
                 return ECommandExecuteResult.NO_PERMISSION
-
-            if args.nick.isnumeric():
-                target_user_id = int(args.nick)
-            elif args.nick.startswith("<@!") and args.nick.endswith('>'):
-                target_user_id = int(args.nick[3:-1])
             else:
-                candidates = list(filter(lambda x: not x.bot and x.display_name == args.nick,
-                                         await msg.guild.fetch_members().flatten()))
-                if not candidates:
+                try:
+                    target_user_id = get_user_id(args.nick, msg.guild)
+                except MultipleUserException:
                     return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
-                target_user_id = candidates[0].id
         else:
             target_user_id = msg.author.id
 

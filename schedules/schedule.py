@@ -1,4 +1,5 @@
 import asyncio
+import inspect
 from datetime import datetime, timedelta
 from typing import Dict
 
@@ -18,7 +19,11 @@ class Scheduler:
             self.next_execute_timestamp: datetime = datetime.now()
 
         async def execute(self) -> None:
-            self.func(*self.args, **self.kwargs)
+            if inspect.iscoroutinefunction(self.func):
+                await self.func(*self.args, **self.kwargs)
+            else:
+                self.func(*self.args, **self.kwargs)
+
             if self.every == timedelta.min:
                 self.next_execute_timestamp = datetime.max
                 self.abort()

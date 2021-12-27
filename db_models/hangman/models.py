@@ -7,7 +7,8 @@ from enum import IntEnum, auto
 from db_models.common.models import User
 from db_models.words.models import EnglishWord
 
-from nextcord import Embed
+from nextcord import ButtonStyle, Embed, Interaction
+from nextcord.ui import View, Button
 
 from constants import *
 from helper_functions import mention_user, get_enum_list
@@ -154,6 +155,23 @@ class EHangmanBattleGuessResult(IntEnum):
     LOSE = auto()
 
 
+class LetterButton(Button):
+
+    # TODO: 2 players pressed the same button, block input when pressed,
+    def __init__(self, letter, game, user1_id, user2_id):
+        super().__init__(style=ButtonStyle.primary, label=letter)
+        self.letter = letter
+        self.game = game
+        self.user1_id = user1_id
+        self.user2_id = user2_id
+
+    async def callback(self, interaction: Interaction):
+        user1_name = (await interaction.guild.fetch_member(self.user1_id)).display_name
+        user2_name = (await interaction.guild.fetch_member(self.user2_id)).display_name
+        await self.game.guess_tiebreak(self.letter, interaction.user.id == self.game.user1.id,
+                                       user1_name, user2_name, interaction.channel)
+
+
 class HangmanBattleGame(BaseModel):
     class EResult(IntEnum):
         PLAYING = auto()
@@ -193,7 +211,7 @@ class HangmanBattleGame(BaseModel):
             chars.append('**' + c + '**' if c not in self.get_all_guesses() else '~~*' + c + '*~~')
         return ' '.join(chars).upper()
 
-    def get_msg(self, user1_name: str, user2_name: str, state: EHangmanBattleState) -> (str, Embed):
+    def get_msg(self, user1_name: str, user2_name: str, state: EHangmanBattleState) -> (str, Embed, View):
         embed = Embed(title='{}님과 {}님의 행맨 배틀'.format(user1_name, user2_name))
         embed.set_image(url=FORCE_FULL_WIDTH_IMAGE_URL)
 
@@ -204,13 +222,29 @@ class HangmanBattleGame(BaseModel):
         embed.add_field(name='{}님이 사용한 글자'.format(user2_name),
                         value=' '.join(user2_guesses) if user2_guesses else EMPTY_LETTER)
 
-        turn_txt = '현재 {}님의 턴입니다!'.format(mention_user(self.user1.id)
-                                          if state == EHangmanBattleState.FIRST_PLAYER_TURN
-                                          else mention_user(self.user2.id))
-        txt = "```{}```\n```{}```\n{}\n\n{}".format(
-            HANGMAN_ARTS[self.state], self.get_word_state(), self.get_character_state(), turn_txt) \
-            if self.result == HangmanBattleGame.EResult.PLAYING and state != EHangmanBattleState.TIE_BREAKER else ""  # TODO
-        return txt, embed
+        turn_txt = '\n\n현재 {}님의 턴입니다!'.format(mention_user(self.user1.id)
+                                              if state == EHangmanBattleState.FIRST_PLAYER_TURN
+                                              else mention_user(self.user2.id))
+
+        txt = "```{}```\n```{}```\n{}".format(HANGMAN_ARTS[self.state], self.get_word_state(),
+                                              self.get_character_state())
+        view = None
+
+        is_tiebreaking = False
+        if self.result == HangmanBattleGame.EResult.PLAYING:
+            if state == EHangmanBattleState.TIE_BREAKER:
+                txt += "\n\n**TIEBREAKER!**"
+                is_tiebreaking = True
+            else:
+                txt += turn_txt
+
+        if is_tiebreaking:
+            view = View(timeout=None)
+            for c in 'abcdefghijklmnopqrstuvwxyz':
+                if c not in self.get_all_guesses():
+                    view.add_item(LetterButton(c, self, self.user1.id, self.user2.id))
+
+        return txt, embed, view
 
     def guess(self, c: str, is_first_user: bool) -> EHangmanBattleGuessResult:
         if c in self.get_all_guesses():
@@ -235,6 +269,36 @@ class HangmanBattleGame(BaseModel):
 
         self.save()
         return to_return
+
+    async def guess_tiebreak(self, c: str, is_first_user: bool, user1_name: str, user2_name: str, channel):
+        if is_first_user:
+            self.user1_draw_guesses += c
+        else:
+            self.user2_draw_guesses += c
+
+        if len(self.user1_draw_guesses) == len(self.user2_draw_guesses):
+            from actions.games.action_hangman_battle_guess import ActionHangmanBattleGuess
+
+            is_user1_correct = self.user1_draw_guesses[-1] in self.word.word
+            is_user2_correct = self.user2_draw_guesses[-1] in self.word.word
+
+            session = self.hangman_battle_session
+            if is_user1_correct != is_user2_correct:
+                result = HangmanBattleGame.EResult.PLAYER_1_WIN \
+                    if is_user1_correct else HangmanBattleGame.EResult.PLAYER_2_WIN
+                session.finish(result)
+                await ActionHangmanBattleGuess.send_result_msg(user1_name, user2_name, channel, session, result)
+            elif all((c in self.word.word for c in self.get_all_guesses())) \
+                    or all((c in self.get_all_guesses() for c in 'abcdefghijklmnopqrstuvwxyz')):
+                result = HangmanBattleGame.EResult.DRAW
+                session.finish(result)
+                await ActionHangmanBattleGuess.send_result_msg(user1_name, user2_name, channel, session, result)
+
+            txt, embed, view = self.get_msg(user1_name, user2_name, EHangmanBattleState(session.state))
+            game_msg = await channel.fetch_message(session.msg_id)
+            await game_msg.edit(content=txt, embed=embed, view=view)
+
+        self.save()
 
 
 class HangmanBattleSession(BaseModel):

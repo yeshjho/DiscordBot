@@ -25,7 +25,8 @@ class JoinView(ui.View):
     @ui.button(label='참가', style=ButtonStyle.primary)
     async def join_game(self, button: ui.Button, interaction: Interaction):
         from db_models.common.models import User
-        from db_models.hangman.models import HangmanBattleGame, HangmanBattleSession, HangmanSession, EHangmanBattleState
+        from db_models.hangman.models import HangmanBattleGame, HangmanBattleSession, HangmanSession, \
+            EHangmanBattleState
         from db_models.words.models import EnglishWord
 
         joiner_id = interaction.user.id
@@ -72,10 +73,10 @@ class JoinView(ui.View):
         session.save()
 
         joiner_name = interaction.user.display_name
-        msg, embed = game.get_msg(self.owner_name if is_first_player_owner else joiner_name,
-                                  joiner_name if is_first_player_owner else self.owner_name,
-                                  EHangmanBattleState(session.state))
-        await interaction.edit(content=msg, embed=embed, view=None)
+        msg, embed, view = game.get_msg(self.owner_name if is_first_player_owner else joiner_name,
+                                        joiner_name if is_first_player_owner else self.owner_name,
+                                        EHangmanBattleState(session.state))
+        await interaction.edit(content=msg, embed=embed, view=view)
 
 
 class CommandHangmanBattle(Command):
@@ -104,12 +105,40 @@ class CommandHangmanBattle(Command):
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        from db_models.hangman.models import HangmanBattleGame, HangmanBattleSession, HangmanSession
+        from db_models.hangman.models import HangmanBattleGame, HangmanBattleSession, \
+            HangmanSession, EHangmanBattleState
 
-        author_id = msg.author.id
+        if args.nick:
+            if args.permission_level < 1:
+                return ECommandExecuteResult.NO_PERMISSION
+            else:
+                try:
+                    target_user_id = await get_user_id(args.nick, msg.guild)
+                except MultipleUserException:
+                    return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
+        else:
+            target_user_id = msg.author.id
+
+        user = await msg.guild.fetch_member(target_user_id)
 
         if args.stat:
-            return  # TODO
+            games = HangmanBattleGame.objects.filter(hangman_battle_session=None)
+            user1_games = games.filter(user1__id=user.id)
+            user2_games = games.filter(user2__id=user.id)
+            total_count = user1_games.count() + user2_games.count()
+            if total_count == 0:
+                await msg.channel.send(user.display_name + "님은 아직 플레이한 적이 없습니다.")
+                return
+
+            win_count = user1_games.filter(state=HangmanBattleGame.EResult.PLAYER_1_WIN.value).count() + \
+                        user2_games.filter(state=HangmanBattleGame.EResult.PLAYER_2_WIN.value).count()
+            draw_count = user1_games.filter(state=HangmanBattleGame.EResult.DRAW.value).count() + \
+                         user2_games.filter(state=HangmanBattleGame.EResult.DRAW.value).count()
+            lose_count = total_count - win_count - draw_count
+
+            return
+
+        author_id = msg.author.id
 
         try:
             HangmanSession.objects.get(user__id=author_id)
@@ -133,7 +162,10 @@ class CommandHangmanBattle(Command):
             try:
                 session_msg = await msg.channel.fetch_message(session.msg_id)
             except nextcord.errors.NotFound:
-                session.msg_id = (await msg.channel.send(session.game.get_msg())).id  # TODO
+                user1_name = (await msg.guild.fetch_member(session.game.user1.id)).display_name
+                user2_name = (await msg.guild.fetch_member(session.game.user2.id)).display_name
+                txt, embed, view = session.game.get_msg(user1_name, user2_name, EHangmanBattleState(session.state))
+                session.msg_id = (await msg.channel.send(content=txt, embed=embed, view=view)).id
                 session.save()
             else:
                 await msg.channel.send(mention_user(author_id) + " 이미 진행 중인 배틀 게임이 있어요!", reference=session_msg)

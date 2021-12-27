@@ -63,6 +63,8 @@ class CommandHangman(Command):
             almost_lost_count = games.filter(state=5).count()
 
             win_rate = win_count / total_count * 100
+            perfect_rate = perfect_count / win_count * 100 if win_count else 0
+            almost_lost_rate = almost_lost_count / win_count * 100 if win_count else 0
 
             times_used = {}
             right_count = {}
@@ -83,7 +85,9 @@ class CommandHangman(Command):
             times_used_top = sorted(times_used.items(), key=lambda e: e[1],
                                     reverse=True)[:CommandHangman.TOP_RANK_LIMIT]
 
-            average_state = sum([game.state % HangmanGame.HANGMAN_PARTS for game in games]) / win_count
+            close_rate = close_count / lose_count * 100 if lose_count else 0
+
+            average_state = sum([game.state % HangmanGame.HANGMAN_PARTS for game in games]) / win_count if win_count else '-'
             average_word_length = sum([len(game.word.word) for game in games]) / total_count
 
             embed = get_embed("{}님의 행맨 전적".format(user.display_name))
@@ -94,9 +98,9 @@ class CommandHangman(Command):
             embed.add_field(name="승리 시 평균 행맨 진행도", value="`{:.2f}`".format(average_state))
             embed.add_field(name='평균 단어 길이', value='`{:.2f}`'.format(average_word_length))
 
-            embed.add_field(name="완승", value="`{}` ({:.2f}%)".format(perfect_count, perfect_count / win_count * 100))
-            embed.add_field(name="석패", value="`{}` ({:.2f}%)".format(close_count, close_count / lose_count * 100))
-            embed.add_field(name="기사회생", value="`{}` ({:.2f}%)".format(almost_lost_count, almost_lost_count / win_count * 100))
+            embed.add_field(name="완승", value="`{}` ({:.2f}%)".format(perfect_count, perfect_rate))
+            embed.add_field(name="석패", value="`{}` ({:.2f}%)".format(close_count, close_rate))
+            embed.add_field(name="기사회생", value="`{}` ({:.2f}%)".format(almost_lost_count, almost_lost_rate))
 
             embed.add_field(name='사용률 Top {}'.format(CommandHangman.TOP_RANK_LIMIT),
                             value="\n".join(["`{}`: {}".format(e[0], e[1]) for e in times_used_top]))

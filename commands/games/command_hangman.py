@@ -4,6 +4,7 @@ from random import randint
 
 import nextcord.errors
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 
 from helper_functions import *
 
@@ -34,7 +35,7 @@ class CommandHangman(Command):
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        from db_models.hangman.models import HangmanGame, HangmanSession
+        from db_models.hangman.models import HangmanGame, HangmanSession, HangmanBattleSession
         from db_models.words.models import EnglishWord
 
         if args.nick:
@@ -111,6 +112,15 @@ class CommandHangman(Command):
             return
 
         author_id = msg.author.id
+
+        try:
+            HangmanBattleSession.objects.get(Q(user1__id=author_id) | Q(user2__id=author_id))
+        except ObjectDoesNotExist:
+            pass
+        else:
+            await msg.channel.send(mention_user(author_id) + "님, 이미 행맨 배틀 게임을 하고 계세요!")
+            return
+
         try:
             session = HangmanSession.objects.get(user__id=author_id)
         except ObjectDoesNotExist:

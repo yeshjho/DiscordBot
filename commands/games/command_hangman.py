@@ -87,7 +87,8 @@ class CommandHangman(Command):
 
             close_rate = close_count / lose_count * 100 if lose_count else 0
 
-            average_state = sum([game.state % HangmanGame.HANGMAN_PARTS for game in games]) / win_count if win_count else '-'
+            average_state = sum([game.state % HangmanGame.HANGMAN_PARTS for game in games]) / win_count \
+                if win_count else ''
             average_word_length = sum([len(game.word.word) for game in games]) / total_count
 
             embed = get_embed("{}님의 행맨 전적".format(user.display_name))
@@ -95,7 +96,7 @@ class CommandHangman(Command):
             embed.set_image(url='https://i.imgur.com/Yj6Wsqp.png')  # force full width
 
             embed.add_field(name="{}승 {}패".format(win_count, lose_count), value="승률 `{:.2f}%`".format(win_rate))
-            embed.add_field(name="승리 시 평균 행맨 진행도", value="`{:.2f}`".format(average_state))
+            embed.add_field(name="승리 시 평균 행맨 진행도", value="`{:.2f}`".format(average_state) if average_state else '-')
             embed.add_field(name='평균 단어 길이', value='`{:.2f}`'.format(average_word_length))
 
             embed.add_field(name="완승", value="`{}` ({:.2f}%)".format(perfect_count, perfect_rate))

@@ -156,8 +156,6 @@ class EHangmanBattleGuessResult(IntEnum):
 
 
 class LetterButton(Button):
-
-    # TODO: 2 players pressed the same button, block input when pressed,
     def __init__(self, letter, game, user1_id, user2_id):
         super().__init__(style=ButtonStyle.primary, label=letter)
         self.letter = letter
@@ -189,6 +187,8 @@ class HangmanBattleGame(BaseModel):
     user2_draw_guesses = models.CharField(max_length=20, default="", validators=[validate_lower_case])
     result = models.SmallIntegerField(choices=get_enum_list(EResult), default=1)
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    draw_processing_games = []
 
     def get_user1_guesses(self) -> str:
         return self.user1_guesses + self.user1_draw_guesses
@@ -271,25 +271,38 @@ class HangmanBattleGame(BaseModel):
         return to_return
 
     async def guess_tiebreak(self, c: str, is_first_user: bool, user1_name: str, user2_name: str, channel):
-        if is_first_user:
-            self.user1_draw_guesses += c
-        else:
-            self.user2_draw_guesses += c
+        if self.id in HangmanBattleGame.draw_processing_games:
+            return
 
-        if len(self.user1_draw_guesses) == len(self.user2_draw_guesses):
+        user1_guess_len = len(self.user1_draw_guesses)
+        user2_guess_len = len(self.user2_draw_guesses)
+        if is_first_user:
+            if user1_guess_len > user2_guess_len:
+                return
+            self.user1_draw_guesses += c
+            user1_guess_len += 1
+        else:
+            if user2_guess_len > user1_guess_len:
+                return
+            self.user2_draw_guesses += c
+            user2_guess_len += 1
+
+        if user1_guess_len == user2_guess_len:
             from actions.games.action_hangman_battle_guess import ActionHangmanBattleGuess
+
+            HangmanBattleGame.draw_processing_games.append(self.id)
 
             is_user1_correct = self.user1_draw_guesses[-1] in self.word.word
             is_user2_correct = self.user2_draw_guesses[-1] in self.word.word
 
             session = self.hangman_battle_session
+            print(self.get_all_guesses())
             if is_user1_correct != is_user2_correct:
                 result = HangmanBattleGame.EResult.PLAYER_1_WIN \
                     if is_user1_correct else HangmanBattleGame.EResult.PLAYER_2_WIN
                 session.finish(result)
                 await ActionHangmanBattleGuess.send_result_msg(user1_name, user2_name, channel, session, result)
-            elif all((c in self.word.word for c in self.get_all_guesses())) \
-                    or all((c in self.get_all_guesses() for c in 'abcdefghijklmnopqrstuvwxyz')):
+            elif all((c in self.get_all_guesses() for c in self.word.word)):
                 result = HangmanBattleGame.EResult.DRAW
                 session.finish(result)
                 await ActionHangmanBattleGuess.send_result_msg(user1_name, user2_name, channel, session, result)
@@ -297,6 +310,7 @@ class HangmanBattleGame(BaseModel):
             txt, embed, view = self.get_msg(user1_name, user2_name, EHangmanBattleState(session.state))
             game_msg = await channel.fetch_message(session.msg_id)
             await game_msg.edit(content=txt, embed=embed, view=view)
+            HangmanBattleGame.draw_processing_games.remove(self.id)
 
         self.save()
 

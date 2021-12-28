@@ -10,6 +10,8 @@ from .hangman import *
 
 
 class ActionHangmanBattleGuess(Action):
+    users_processing = []
+
     async def on_message(self, msg: Message, **kwargs):
         from db_models.hangman.models import HangmanBattleSession, EHangmanBattleState, \
             EHangmanBattleGuessResult, HangmanBattleGame
@@ -29,6 +31,8 @@ class ActionHangmanBattleGuess(Action):
             return EActionExecuteResult.NO_MATCH
 
         game: HangmanBattleGame = session.game
+        if not game:
+            return EActionExecuteResult.NO_MATCH
 
         is_first_players_turn = session.state == EHangmanBattleState.FIRST_PLAYER_TURN.value
         if is_first_players_turn and game.user2.id == author_id or \
@@ -36,8 +40,9 @@ class ActionHangmanBattleGuess(Action):
             await msg.channel.send(mention_user(author_id) + "님의 차례가 아닙니다!", delete_after=1)
             return
 
-        if not game:
-            return EActionExecuteResult.NO_MATCH
+        if author_id in ActionHangmanBattleGuess.users_processing:
+            return
+        ActionHangmanBattleGuess.users_processing.append(author_id)
 
         await msg.delete()
 
@@ -52,7 +57,6 @@ class ActionHangmanBattleGuess(Action):
                 session.user1_wrong_count += 1
             else:
                 session.user2_wrong_count += 1
-            session.save()
 
         elif guess_result == EHangmanBattleGuessResult.ALREADY_USED:
             await msg.channel.send(mention_user(author_id) + " 이미 사용된 글자입니다!", delete_after=1)
@@ -70,7 +74,6 @@ class ActionHangmanBattleGuess(Action):
                 await self.send_result_msg(user1_nick, user2_nick, msg.channel, session, result)
             else:
                 session.state = EHangmanBattleState.TIE_BREAKER
-            session.save()
 
         elif guess_result == EHangmanBattleGuessResult.WIN:
             result = HangmanBattleGame.EResult.PLAYER_1_WIN \
@@ -86,10 +89,11 @@ class ActionHangmanBattleGuess(Action):
         except nextcord.errors.NotFound:
             msg_id = (await msg.channel.send(txt, embed=embed, view=view)).id
             session.msg_id = msg_id
-            session.save()
         else:
             await game_msg.edit(content=txt, embed=embed, view=view)
 
+        session.save()
+        ActionHangmanBattleGuess.users_processing.remove(author_id)
         return author_id, "guessed letter", c, "in battle"
 
     @staticmethod

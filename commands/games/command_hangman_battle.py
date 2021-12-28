@@ -56,7 +56,7 @@ class JoinView(ui.View):
             return
         self.enabled = False
 
-        session.user2 = User.objects.get(id=joiner_id)
+        session.user2, _ = User.objects.get_or_create(id=joiner_id)
 
         word_count = EnglishWord.objects.count()
         while True:

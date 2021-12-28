@@ -81,3 +81,7 @@ async def get_user_id(nick_or_mention_or_id, guild=None) -> int or List[int]:
         return candidates[0].id
     else:
         raise
+
+
+def get_enum_list(enum):
+    return [(e.value, e.name) for e in list(enum)]

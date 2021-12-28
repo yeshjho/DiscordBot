@@ -4,6 +4,7 @@ from random import randint
 
 import nextcord.errors
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import Q
 
 from helper_functions import *
 
@@ -34,7 +35,7 @@ class CommandHangman(Command):
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        from db_models.hangman.models import HangmanGame, HangmanSession
+        from db_models.hangman.models import HangmanGame, HangmanSession, HangmanBattleSession, HANGMAN_PARTS
         from db_models.words.models import EnglishWord
 
         if args.nick:
@@ -57,7 +58,7 @@ class CommandHangman(Command):
                 await msg.channel.send(user.display_name + "님은 아직 플레이한 적이 없습니다.")
                 return
 
-            lose_count = games.filter(state=HangmanGame.HANGMAN_PARTS).count()
+            lose_count = games.filter(state=HANGMAN_PARTS).count()
             win_count = total_count - lose_count
             perfect_count = games.filter(state=0).count()
             almost_lost_count = games.filter(state=5).count()
@@ -71,7 +72,7 @@ class CommandHangman(Command):
             wrong_count = {}
             close_count = 0
             for game in games:
-                if game.state == HangmanGame.HANGMAN_PARTS and len(set(game.word.word) - set(game.guesses)) == 1:
+                if game.state == HANGMAN_PARTS and len(set(game.word.word) - set(game.guesses)) == 1:
                     close_count += 1
                 for c in game.guesses:
                     times_used[c] = times_used.get(c, 0) + 1
@@ -87,13 +88,13 @@ class CommandHangman(Command):
 
             close_rate = close_count / lose_count * 100 if lose_count else 0
 
-            average_state = sum([game.state % HangmanGame.HANGMAN_PARTS for game in games]) / win_count \
+            average_state = sum([game.state % HANGMAN_PARTS for game in games]) / win_count \
                 if win_count else ''
             average_word_length = sum([len(game.word.word) for game in games]) / total_count
 
             embed = get_embed("{}님의 행맨 전적".format(user.display_name))
             embed.colour = round((100 - win_rate) / 100 * 255) * 16 ** 4 + round(win_rate / 100 * 255)
-            embed.set_image(url='https://i.imgur.com/Yj6Wsqp.png')  # force full width
+            embed.set_image(url=FORCE_FULL_WIDTH_IMAGE_URL)
 
             embed.add_field(name="{}승 {}패".format(win_count, lose_count), value="승률 `{:.2f}%`".format(win_rate))
             embed.add_field(name="승리 시 평균 행맨 진행도", value="`{:.2f}`".format(average_state) if average_state else '-')
@@ -116,6 +117,15 @@ class CommandHangman(Command):
             return
 
         author_id = msg.author.id
+
+        try:
+            HangmanBattleSession.objects.get(Q(user1__id=author_id) | Q(user2__id=author_id))
+        except ObjectDoesNotExist:
+            pass
+        else:
+            await msg.channel.send(mention_user(author_id) + "님, 이미 행맨 배틀 게임을 하고 계세요!")
+            return
+
         try:
             session = HangmanSession.objects.get(user__id=author_id)
         except ObjectDoesNotExist:

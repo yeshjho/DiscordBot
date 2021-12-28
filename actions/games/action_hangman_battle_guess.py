@@ -49,6 +49,8 @@ class ActionHangmanBattleGuess(Action):
         user1_nick = (await msg.guild.fetch_member(session.game.user1.id)).display_name
         user2_nick = (await msg.guild.fetch_member(session.game.user2.id)).display_name
 
+        is_finished = False
+
         guess_result = game.guess(c, author_id == game.user1.id)
         if guess_result == EHangmanBattleGuessResult.WRONG:
             session.state = EHangmanBattleState.FIRST_PLAYER_TURN.value if not is_first_players_turn else \
@@ -71,6 +73,7 @@ class ActionHangmanBattleGuess(Action):
                 result = HangmanBattleGame.EResult.PLAYER_2_WIN \
                     if session.user1_wrong_count > session.user2_wrong_count else HangmanBattleGame.EResult.PLAYER_1_WIN
                 session.finish(result)
+                is_finished = True
                 await self.send_result_msg(user1_nick, user2_nick, msg.channel, session, result)
             else:
                 session.state = EHangmanBattleState.TIE_BREAKER
@@ -79,6 +82,7 @@ class ActionHangmanBattleGuess(Action):
             result = HangmanBattleGame.EResult.PLAYER_1_WIN \
                 if is_first_players_turn else HangmanBattleGame.EResult.PLAYER_2_WIN
             session.finish(result)
+            is_finished = True
             await self.send_result_msg(user1_nick, user2_nick, msg.channel, session, result)
 
         user1_nick = (await msg.guild.fetch_member(game.user1.id)).display_name
@@ -92,7 +96,8 @@ class ActionHangmanBattleGuess(Action):
         else:
             await game_msg.edit(content=txt, embed=embed, view=view)
 
-        session.save()
+        if not is_finished:
+            session.save()
         ActionHangmanBattleGuess.users_processing.remove(author_id)
         return author_id, "guessed letter", c, "in battle"
 

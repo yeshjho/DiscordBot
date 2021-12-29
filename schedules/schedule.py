@@ -18,7 +18,9 @@ class Scheduler:
 
             self.next_execute_timestamp: datetime = datetime.now()
 
-        async def execute(self) -> None:
+        async def execute(self) -> bool:
+            log_schedule(self.name, self.next_execute_timestamp)
+
             if inspect.iscoroutinefunction(self.func):
                 await self.func(*self.args, **self.kwargs)
             else:
@@ -26,11 +28,10 @@ class Scheduler:
 
             if self.every == timedelta.min:
                 self.next_execute_timestamp = datetime.max
-                self.abort()
+                return False
             else:
                 self.next_execute_timestamp = datetime.now() + self.every
-
-            log_schedule(self.name, self.next_execute_timestamp)
+                return True
 
         def abort(self) -> None:
             del Scheduler.schedules[self.name]
@@ -45,10 +46,16 @@ class Scheduler:
 
     @staticmethod
     async def update():
+        to_remove = []
+
         now: datetime = datetime.now()
-        for _, schedule in Scheduler.schedules.items():
+        for name, schedule in Scheduler.schedules.items():
             if schedule.next_execute_timestamp <= now:
-                await schedule.execute()
+                if not await schedule.execute():
+                    to_remove.append(name)
+
+        for name in to_remove:
+            del Scheduler.schedules[name]
 
     @staticmethod
     async def main_loop():

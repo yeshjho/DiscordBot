@@ -1,5 +1,6 @@
 from schedules.schedule import *
 from schedules.schedule_cpp_tips import *
+from schedules.schedule_d_day_countdown import *
 
 
 def get_next_hour(hour: int) -> datetime:
@@ -11,3 +12,4 @@ def get_next_hour(hour: int) -> datetime:
 
 def schedule_initial(*args, **kwargs):
     Scheduler.schedule(publish_random_cpp_tips, "CppTips", get_next_hour(15), timedelta(days=1), kwargs['bot'])
+    Scheduler.schedule(change_d_day_nick, "DDayNick", get_next_hour(0), timedelta(days=1), kwargs['bot'])

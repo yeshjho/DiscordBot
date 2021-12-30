@@ -5,8 +5,7 @@ from schedules.schedule_d_day_countdown import *
 
 def get_next_hour(hour: int) -> datetime:
     now: datetime = datetime.now()
-    now = now.replace(minute=0, second=0, microsecond=0)
-    today_hour = now.replace(hour=hour)
+    today_hour = now.replace(hour=hour, minute=0, second=0, microsecond=0)
     return today_hour.replace(day=now.day + 1) if now > today_hour else today_hour
 
 

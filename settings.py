@@ -28,3 +28,5 @@ INSTALLED_APPS = (
 )
 
 SECRET_KEY = os.getenv('DISCORD_BOT_DJANGO_SECRET_KEY')
+
+TIME_ZONE = 'Asia/Seoul'

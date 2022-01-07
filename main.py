@@ -51,6 +51,8 @@ class DiscordBot(nextcord.Client):
 
         emoji_container.initialize_cache(self.emoji_cache_guilds, self.emojis)
 
+        await self.fetch_guilds().flatten()
+
         schedule_initial(main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
                          alias_map=alias_map)
 

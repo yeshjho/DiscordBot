@@ -10,7 +10,7 @@ from logger import *
 
 commands = []
 
-EXCLUDES = ['command_dispatcher', 'command_word']
+EXCLUDES = ['command_dispatcher']
 for command_file in glob('commands/**/*.py', recursive=True):
     module_name = ''.join(command_file.split('.')[:-1]).replace('\\', '.').replace('/', '.')
     file_name = module_name.split('.')[-1]

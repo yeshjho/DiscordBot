@@ -5,6 +5,7 @@ from glob import glob
 from nextcord import Message
 
 from commands.command import CommandExecuteError
+from custom_command import guild_custom_commands
 from helper_functions import *
 from logger import *
 
@@ -36,14 +37,18 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!", delete_after=1)
         return
 
-    command_str = alias_map.get(command_str, command_str)
-    if command_str not in commands_map:
-        await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
-        return
+    custom_commands = guild_custom_commands.get(msg.guild.id, {})
+    if command_str in custom_commands:
+        command = custom_commands[command_str].execute(msg, )
+    else:
+        command_str = alias_map.get(command_str, command_str)
+        if command_str not in commands_map:
+            await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
+            return
+        command = commands_map[command_str]
 
-    Logger.log("Executing command:", command_str, "with", msg.content)
-
-    command = commands_map[command_str]
+    Logger.log("Executing " + "custom " if command_str in custom_commands else "" + "command:",
+               command_str, "with", msg.content)
 
     parser = NonExitingArgumentParser(add_help=False)
     command.fill_arg_parser(parser)
@@ -57,7 +62,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     else:
         try:
             args_namespace.permission_level = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
-            return_value = await command.execute(msg, args_namespace, **kwargs)
+            return_value = await command.execute(msg, )
         except CommandExecuteError as err:
             return_value = ECommandExecuteResult.CUSTOM_ERROR
             additional_args = err.args
@@ -76,7 +81,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     elif return_value == ECommandExecuteResult.SYNTAX_ERROR:
         fake_namespace = argparse.Namespace()
         fake_namespace.__setattr__('command', command_str)
-        await commands_map['help'].execute(msg, fake_namespace, **kwargs)
+        await commands_map['help'].execute(msg, )
 
     elif return_value == ECommandExecuteResult.CUSTOM_ERROR:
         await command.on_custom_error(msg, *additional_args, **additional_kwargs)

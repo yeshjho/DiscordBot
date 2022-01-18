@@ -1,6 +1,8 @@
 import requests
 from bs4 import BeautifulSoup
 
+from constants import EMPTY_LETTER
+
 
 def get_meaning(word: str) -> (str, str):
     dict_link = 'http://endic.naver.com/search.nhn?query={}'.format(word)
@@ -8,6 +10,6 @@ def get_meaning(word: str) -> (str, str):
     try:
         meaning = soup.find('dl', {'class': 'list_e2'}).find('dd').find('span', {'class': 'fnt_k05'}).get_text()
     except AttributeError:
-        meaning = ''
+        meaning = EMPTY_LETTER
 
     return dict_link, meaning

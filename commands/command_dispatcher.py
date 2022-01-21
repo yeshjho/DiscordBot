@@ -37,9 +37,9 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!", delete_after=1)
         return
 
-    custom_commands = guild_custom_commands.get(msg.guild.id, {})
+    custom_commands = guild_custom_commands.get(msg.guild.id if msg.guild else 0, {})
     if command_str in custom_commands:
-        command = custom_commands[command_str].execute(msg, )
+        command = custom_commands[command_str]
     else:
         command_str = alias_map.get(command_str, command_str)
         if command_str not in commands_map:
@@ -47,7 +47,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
             return
         command = commands_map[command_str]
 
-    Logger.log("Executing " + "custom " if command_str in custom_commands else "" + "command:",
+    Logger.log("Executing " + ("custom " if command_str in custom_commands else "") + "command:",
                command_str, "with", msg.content)
 
     parser = NonExitingArgumentParser(add_help=False)
@@ -63,7 +63,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     else:
         try:
             args_namespace.permission_level = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
-            return_value = await command.execute(msg, )
+            return_value = await command.execute(msg, args_namespace, **kwargs)
         except CommandExecuteError as err:
             return_value = ECommandExecuteResult.CUSTOM_ERROR
             additional_args = err.args
@@ -82,7 +82,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     elif return_value == ECommandExecuteResult.SYNTAX_ERROR:
         fake_namespace = argparse.Namespace()
         fake_namespace.__setattr__('command', command_str)
-        await commands_map['help'].execute(msg, )
+        await commands_map['help'].execute(msg, fake_namespace, **kwargs)
 
     elif return_value == ECommandExecuteResult.CUSTOM_ERROR:
         await command.on_custom_error(msg, *additional_args, **additional_kwargs)

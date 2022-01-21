@@ -1,7 +1,9 @@
 from abc import ABCMeta, abstractmethod
 from enum import IntEnum, auto
 
-from nextcord import TextChannel
+from nextcord import TextChannel, Client, User
+
+from helper_functions import *
 
 
 class ECustomTaskArgumentType(IntEnum):
@@ -21,7 +23,7 @@ class CustomTaskArgument(metaclass=ABCMeta):
 
     # gets an input from user and returns a string storeable in the db
     @abstractmethod
-    async def get_input(self, channel: TextChannel) -> str:
+    async def get_input(self, bot: Client, user: User, channel: TextChannel) -> str:
         pass
 
     # takes the argument stored in the db and reinterprets to its type
@@ -29,20 +31,27 @@ class CustomTaskArgument(metaclass=ABCMeta):
     def parse(self, arg: str):
         pass
 
+    @property
+    def no_prompt(self) -> bool:
+        return False
 
-# TODO: 입력 받을 때 공통으로 이름 출력하고 ~~에 대한 입력을 받습니다 같은 거 할 거 같은데 얘네 처리?
+
 class CustomTaskArgumentChannel(CustomTaskArgument):
     @property
     def type(self) -> ECustomTaskArgumentType:
         return ECustomTaskArgumentType.CHANNEL
 
     # special case
-    async def get_input(self, channel: TextChannel) -> str:
+    async def get_input(self, bot: Client, user: User, channel: TextChannel) -> str:
         return 'channel'
 
     # special case, arg won't be a str but a channel object itself
     def parse(self, arg: str):
         return arg
+
+    @property
+    def no_prompt(self) -> bool:
+        return True
 
 
 class CustomTaskArgumentText(CustomTaskArgument):
@@ -50,9 +59,22 @@ class CustomTaskArgumentText(CustomTaskArgument):
     def type(self) -> ECustomTaskArgumentType:
         return ECustomTaskArgumentType.TEXT
 
-    async def get_input(self, channel: TextChannel) -> str:
-        # TODO
-        pass
+    async def get_input(self, bot: Client, user: User, channel: TextChannel) -> str:
+        return (await bot.wait_for('message', check=lambda x: x.author.id == user.id, timeout=60)).content
+
+    def parse(self, arg: str):
+        return arg
+
+
+class CustomTaskArgumentUserMention(CustomTaskArgument):
+    @property
+    def type(self) -> ECustomTaskArgumentType:
+        return ECustomTaskArgumentType.USER_MENTION
+
+    async def get_input(self, bot: Client, user: User, channel: TextChannel) -> str:
+        return (await bot.wait_for('message', check=lambda x: x.author.id == user.id and
+                                                              x.content.startswith("<@") and x.content.endswith('>'),
+                                   timeout=60)).content
 
     def parse(self, arg: str):
         return arg

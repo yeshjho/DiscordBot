@@ -24,7 +24,8 @@ DATABASES = {
 INSTALLED_APPS = (
     'db_models.common',
     'db_models.hangman',
-    'db_models.words'
+    'db_models.words',
+    'db_models.custom_command_action'
 )
 
 SECRET_KEY = os.getenv('DISCORD_BOT_DJANGO_SECRET_KEY')

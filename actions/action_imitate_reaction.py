@@ -12,4 +12,6 @@ class ActionImitateReaction(Action):
 
         await reaction.message.add_reaction(reaction.emoji)
 
-        return "reacted", reaction.emoji.name, "()".format(reaction.emoji.id), "following", user.id
+        emoji_info = reaction.emoji if isinstance(reaction.emoji, str) else \
+            reaction.emoji.name + " ()".format(reaction.emoji.id)
+        return "reacted", emoji_info, "following", user.id

@@ -10,6 +10,7 @@ def get_meaning(word: str) -> (str, str):
     try:
         meaning = soup.find('dl', {'class': 'list_e2'}).find('dd').find('span', {'class': 'fnt_k05'}).get_text()
     except AttributeError:
-        meaning = EMPTY_LETTER
+        meaning = ''
+    meaning = meaning if meaning else EMPTY_LETTER
 
     return dict_link, meaning

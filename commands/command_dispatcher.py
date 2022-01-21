@@ -5,12 +5,13 @@ from glob import glob
 from nextcord import Message
 
 from commands.command import CommandExecuteError
+from commands.custom_command_action.custom_command import guild_custom_commands
 from helper_functions import *
 from logger import *
 
 commands = []
 
-EXCLUDES = ['command_dispatcher', 'command_word']
+EXCLUDES = ['command_dispatcher']
 for command_file in glob('commands/**/*.py', recursive=True):
     module_name = ''.join(command_file.split('.')[:-1]).replace('\\', '.').replace('/', '.')
     file_name = module_name.split('.')[-1]
@@ -36,14 +37,18 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         await msg.channel.send(mention_user(msg.author) + " 테스트 중엔 사용할 수 없어요!", delete_after=1)
         return
 
-    command_str = alias_map.get(command_str, command_str)
-    if command_str not in commands_map:
-        await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
-        return
+    custom_commands = guild_custom_commands.get(msg.guild.id if msg.guild else 0, {})
+    if command_str in custom_commands:
+        command = custom_commands[command_str]
+    else:
+        command_str = alias_map.get(command_str, command_str)
+        if command_str not in commands_map:
+            await msg.channel.send(mention_user(msg.author) + " 모르는 명령어입니다. 도움말을 보려면 `help를 입력하세요.")
+            return
+        command = commands_map[command_str]
 
-    Logger.log("Executing command:", command_str, "with", msg.content)
-
-    command = commands_map[command_str]
+    Logger.log("Executing " + ("custom " if command_str in custom_commands else "") + "command:",
+               command_str, "with", msg.content)
 
     parser = NonExitingArgumentParser(add_help=False)
     command.fill_arg_parser(parser)
@@ -51,7 +56,8 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     additional_args = []
     additional_kwargs = {}
     try:
-        args_namespace, _ = parser.parse_known_args(args)
+        args_namespace, extra_args = parser.parse_known_args(args)
+        args_namespace.extra_args = extra_args
     except argparse.ArgumentError:
         return_value = ECommandExecuteResult.SYNTAX_ERROR
     else:

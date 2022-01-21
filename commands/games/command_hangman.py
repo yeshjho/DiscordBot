@@ -45,7 +45,7 @@ class CommandHangman(Command):
                 try:
                     target_user_id = await get_user_id(args.nick, msg.guild)
                 except MultipleUserException:
-                    return ECommandExecuteResult.CUSTOM_ERROR, "해당하는 유저가 없거나 여러 명입니다!"
+                    raise CommandExecuteError("해당하는 유저가 없거나 여러 명입니다!", delete_after=2)
         else:
             target_user_id = msg.author.id
 

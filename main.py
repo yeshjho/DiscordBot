@@ -4,6 +4,7 @@ from django.core.wsgi import get_wsgi_application
 from nextcord import Game
 
 from actions.action_dispatcher import Action, execute_action, actions
+from commands.custom_command_action.custom_command import CustomCommand
 from commands.command_dispatcher import commands_map, alias_map, execute_command
 from schedules.initial_schedules import schedule_initial, Scheduler
 from emoji_container import *
@@ -55,6 +56,7 @@ class DiscordBot(nextcord.Client):
 
         schedule_initial(main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
                          alias_map=alias_map)
+        CustomCommand.load()
 
         print("Ready!")
 

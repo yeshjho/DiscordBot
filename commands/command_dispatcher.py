@@ -5,7 +5,7 @@ from glob import glob
 from nextcord import Message
 
 from commands.command import CommandExecuteError
-from custom_command import guild_custom_commands
+from commands.custom_command_action.custom_command import guild_custom_commands
 from helper_functions import *
 from logger import *
 
@@ -56,7 +56,8 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     additional_args = []
     additional_kwargs = {}
     try:
-        args_namespace, _ = parser.parse_known_args(args)
+        args_namespace, extra_args = parser.parse_known_args(args)
+        args_namespace.extra_args = extra_args
     except argparse.ArgumentError:
         return_value = ECommandExecuteResult.SYNTAX_ERROR
     else:

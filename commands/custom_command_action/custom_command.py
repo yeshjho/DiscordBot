@@ -1,26 +1,11 @@
-from command import *
+from ..command import *
 
 from nextcord import Message
 
-from db_models.custom_command_action.models import EAction
-
-from helper_functions import *
-
-
-async def cc_send_message(msg, arg0, *_):
-    await msg.channel.send(' '.join(arg0))
-
-
-async def cc_mention_user(msg, arg0, arg1, *_):
-    await msg.channel.send(mention_user(int(arg0)) + " " + arg1)
+from custom_task import custom_tasks
 
 
 class CustomCommand(Command):
-    FUNCTIONS = {
-        EAction.SEND_MESSAGE: cc_send_message,
-        EAction.MENTION_USER: cc_mention_user,
-    }
-
     def __init__(self, command_model_object):
         super().__init__()
         self.model_object = command_model_object
@@ -32,7 +17,8 @@ class CustomCommand(Command):
         return self.model_object.permission_level
 
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        await CustomCommand.FUNCTIONS[self.model_object.action](msg, self.model_object.arg0, self.model_object.arg1)
+        stored_args = (self.model_object.arg0, self.model_object.arg1)
+        await custom_tasks[self.model_object.task].execute(stored_args, args.extra_args, msg.channel)
 
     @staticmethod
     def load():

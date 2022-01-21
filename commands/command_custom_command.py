@@ -1,7 +1,5 @@
 from commands.command import *
 
-from custom_command import guild_custom_commands, add_custom_command
-
 
 class CommandCustomCommand(Command):
     """
@@ -24,7 +22,6 @@ class CommandCustomCommand(Command):
 
     @execute_condition_checker()
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
-        from db_models.custom_command_action.models import CustomCommand
 
         if args.mode:
             return

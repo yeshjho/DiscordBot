@@ -55,6 +55,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
 
     additional_args = []
     additional_kwargs = {}
+    permission_level = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
     try:
         args_namespace, extra_args = parser.parse_known_args(args)
         args_namespace.extra_args = extra_args
@@ -62,7 +63,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
         return_value = ECommandExecuteResult.SYNTAX_ERROR
     else:
         try:
-            args_namespace.permission_level = get_permission_level(msg.author.id, msg.guild.id, [role.id for role in msg.author.roles])
+            args_namespace.permission_level = permission_level
             return_value = await command.execute(msg, args_namespace, **kwargs)
         except CommandExecuteError as err:
             return_value = ECommandExecuteResult.CUSTOM_ERROR
@@ -82,6 +83,7 @@ async def execute_command(msg: Message, command_str: str, args: list, **kwargs):
     elif return_value == ECommandExecuteResult.SYNTAX_ERROR:
         fake_namespace = argparse.Namespace()
         fake_namespace.__setattr__('command', command_str)
+        fake_namespace.permission_level = permission_level
         await commands_map['help'].execute(msg, fake_namespace, **kwargs)
 
     elif return_value == ECommandExecuteResult.CUSTOM_ERROR:

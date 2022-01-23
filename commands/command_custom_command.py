@@ -18,9 +18,6 @@ class TaskConfirmButton(Button):
         self.channel = channel
         self.command = command
 
-    def set_msg_id(self, msg_id):
-        self.msg_id = msg_id
-
     async def callback(self, interaction: Interaction):
         from db_models.custom_command_action.models import CustomCommand as CommandModel
 
@@ -73,7 +70,7 @@ class CommandCustomCommand(Command):
             for command_str, command in guild_custom_commands[guild.id].items():
                 obj = command.model_object
                 task = custom_tasks[obj.task]
-                embed.add_field(name=command_str, value=task.format_string.format(*obj.get_args()))
+                embed.add_field(name=command_str, value=task.format_string.format(*obj.get_args()), inline=False)
             embed.set_image(url=FORCE_FULL_WIDTH_IMAGE_URL)
             await msg.channel.send(embed=embed)
 
@@ -85,7 +82,7 @@ class CommandCustomCommand(Command):
                                                                        not x.content.startswith(COMMAND_PREFIX) and
                                                                        all([not y.isspace() for y in x.content]),
                                                        timeout=60)
-                command = command.content
+                command = command.content.lower()
 
             except TimeoutError:
                 raise CommandExecuteError("시간이 초과됐습니다")
@@ -104,8 +101,7 @@ class CommandCustomCommand(Command):
             view.add_item(select)
             button = TaskConfirmButton(kwargs['bot'], msg.author, msg.channel, command)
             view.add_item(button)
-            msg = await msg.channel.send('`' + command + "` 명령어가 할 작업을 선택하세요", view=view)
-            button.set_msg_id(msg.id)
+            await msg.channel.send('`' + command + "` 명령어가 할 작업을 선택하세요", view=view)
 
         if args.mode in ['edit', 'e', '수정']:
             return

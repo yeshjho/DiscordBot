@@ -29,8 +29,8 @@ class TaskConfirmButton(Button):
         embed = get_embed('명령어 ' + self.command, '작업: ' + task_instance.task_name)
         msg = await self.channel.send(embed=embed)
         args = []
-        await task_instance.get_arguments_input(msg, embed, self.bot, self.user, self.channel, True, args)
-        if not args:
+        if not await task_instance.get_arguments_input(msg, embed, self.bot, self.user, self.channel, True, args):
+            await interaction.send(content='시간 초과!')
             return
 
         args_dict = dict([('arg' + str(i), arg) for i, arg in enumerate(args)])

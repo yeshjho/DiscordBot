@@ -1,8 +1,12 @@
 from abc import ABCMeta, abstractmethod
+from asyncio import TimeoutError
 from enum import IntEnum, auto
+import re
 
 from nextcord import TextChannel, Client, User, Interaction, ButtonStyle
 from nextcord.ui import Button, View, Select
+
+from helper_functions import *
 
 
 class ECustomTaskArgumentType(IntEnum):
@@ -32,6 +36,11 @@ class CustomTaskArgument(metaclass=ABCMeta):
     def parse(self, arg: str):
         pass
 
+    # takes the argument as a string and returns a string for display
+    @abstractmethod
+    def get_display_str(self, arg: str, **kwargs) -> str:
+        pass
+
     @property
     def no_prompt(self) -> bool:
         return False
@@ -50,6 +59,9 @@ class CustomTaskArgumentChannel(CustomTaskArgument):
     def parse(self, arg: str):
         return arg
 
+    def get_display_str(self, arg: str, **kwargs) -> str:
+        pass
+
     @property
     def no_prompt(self) -> bool:
         return True
@@ -66,6 +78,9 @@ class CustomTaskArgumentText(CustomTaskArgument):
     def parse(self, arg: str):
         return arg
 
+    def get_display_str(self, arg: str, **kwargs) -> str:
+        return arg
+
 
 class CustomTaskArgumentUser(CustomTaskArgument):
     @property
@@ -74,12 +89,15 @@ class CustomTaskArgumentUser(CustomTaskArgument):
 
     async def get_input(self, bot: Client, user: User, channel: TextChannel, **kwargs) -> str:
         mention = (await bot.wait_for('message', check=lambda x: x.author.id == user.id and
-                                                              x.content.startswith("<@") and x.content.endswith('>'),
+                                                                 x.content.startswith("<@") and x.content.endswith('>'),
                                       timeout=60)).content
         return ''.join(filter(lambda x: x.isdigit(), mention))
 
     def parse(self, arg: str):
         return int(arg)
+
+    def get_display_str(self, arg: str, **kwargs) -> str:
+        return mention_user(int(arg))
 
 
 class ArgumentTaskConfirmButton(Button):
@@ -116,8 +134,9 @@ class CustomTaskArgumentTask(CustomTaskArgument):
 
         await bot.wait_for('interaction', check=lambda x: x.message.id == msg_id and button.selected_task != -1)
         task_id = button.selected_task
-        await custom_tasks[task_id].get_arguments_input(kwargs['msg'], kwargs['embed'],
-                                                        bot, user, channel, False, kwargs['args_out'])
+        if not await custom_tasks[task_id].get_arguments_input(kwargs['msg'], kwargs['embed'],
+                                                               bot, user, channel, False, kwargs['args_out']):
+            raise TimeoutError
 
         return str(task_id)
 
@@ -128,6 +147,9 @@ class CustomTaskArgumentTask(CustomTaskArgument):
         task_args = [x.parse(y) for x, y in zip(custom_task.arguments, args)]
         return *task_args, task_id
 
+    def get_display_str(self, arg: str, **kwargs) -> str:
+        return kwargs['custom_tasks'][int(arg)].task_name
+
 
 class CustomTaskArgumentInt(CustomTaskArgument):
     @property
@@ -135,8 +157,13 @@ class CustomTaskArgumentInt(CustomTaskArgument):
         return ECustomTaskArgumentType.INT
 
     async def get_input(self, bot: Client, user: User, channel: TextChannel, **kwargs) -> str:
-        return (await bot.wait_for('message', check=lambda x: x.author.id == user.id and x.content.isdigit(),
+        return (await bot.wait_for('message', check=lambda x: x.author.id == user.id and
+                                                              (x.content.isdigit() or
+                                                                  re.search(r'^arg(\d+)$', x.content)),
                                    timeout=60)).content
 
     def parse(self, arg: str):
         return int(arg)
+
+    def get_display_str(self, arg: str, **kwargs) -> str:
+        return arg

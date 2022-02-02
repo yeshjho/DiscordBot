@@ -1,7 +1,6 @@
 from asyncio import TimeoutError
 from datetime import datetime, timedelta
 from itertools import chain
-from re import search
 from typing import Tuple, Optional
 
 from nextcord import Message
@@ -53,7 +52,7 @@ class CustomTask(metaclass=ABCMeta):
         pass
 
     async def get_arguments_input(self, msg: Message, embed: Embed, bot: Client, user: User, channel: TextChannel,
-                                  is_for_command: bool, args_out: List[str]) -> None:
+                                  is_for_command: bool, args_out: List[str]) -> bool:
         if is_for_command:
             await channel.send('참고: arg0, arg1과 같은 식으로 명령어가 사용될 때 받는 인자를 표시할 수 있습니다\n'
                                '예) `arg0`을 입력해두면 `(명령어) lorem`과 같은 식으로 명령어가 사용됐을 시 해당 인자에 `lorem`이 들어감')
@@ -65,16 +64,17 @@ class CustomTask(metaclass=ABCMeta):
                                             custom_tasks=custom_tasks)
                 args_out.append(value)
                 if not arg.no_prompt:
-                    embed.add_field(name=arg.arg_name, value=value)
+                    embed.add_field(name=arg.arg_name, value=arg.get_display_str(value, custom_tasks=custom_tasks))
                     await msg.edit(embed=embed)
             except (nextcord.errors.HTTPException, TimeoutError):
-                return
+                return False
+        return True
 
     async def execute(self, stored_args: Tuple[str, ...], user_args: Tuple[str, ...], channel: Optional[TextChannel],
                       **kwargs):
         args = []
         for arg in stored_args:
-            result = search(r'^arg(\d+)$', arg)
+            result = re.search(r'^arg(\d+)$', arg)
             if result:
                 index = int(result[1])
                 if len(user_args) < index + 1:

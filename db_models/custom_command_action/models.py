@@ -11,6 +11,12 @@ class CustomCommand(BaseModel):
     arg1 = models.TextField(default='')
     arg2 = models.TextField(default='')
     arg3 = models.TextField(default='')
+    arg4 = models.TextField(default='')
+    arg5 = models.TextField(default='')
+    arg6 = models.TextField(default='')
+    arg7 = models.TextField(default='')
+    arg8 = models.TextField(default='')
+    arg9 = models.TextField(default='')
 
     def get_args(self):
         index = 0

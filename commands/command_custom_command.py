@@ -24,8 +24,12 @@ class TaskConfirmButton(Button):
         values = self.view.children[0].values
         selected_task = int(values[0] if values else '1')
         await interaction.edit(content='`' + self.command + '` 명령어 생성 중', view=None)
-        args = await custom_tasks[selected_task].get_arguments_input('명령어 ' + self.command,
-                                                                     self.bot, self.user, self.channel, True)
+
+        task_instance = custom_tasks[selected_task]
+        embed = get_embed('명령어 ' + self.command, '작업: ' + task_instance.task_name)
+        msg = await self.channel.send(embed=embed)
+        args = []
+        await task_instance.get_arguments_input(msg, embed, self.bot, self.user, self.channel, True, args)
         if not args:
             return
 
@@ -55,7 +59,7 @@ class CommandCustomCommand(Command):
 
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
         parser.add_argument('mode', nargs='?', choices=['create', 'c', '생성', '만들기', 'edit', 'e', '수정',
-                                                        'delete', 'remove', 'd', 'r', 'rm', '삭제'])
+                                                        'delete', 'remove', 'd', 'del', 'r', 'rm', '삭제'])
         parser.add_argument('command_to_remove', nargs='?')
 
     @execute_condition_checker()
@@ -70,7 +74,7 @@ class CommandCustomCommand(Command):
             for command_str, command in guild_custom_commands[guild.id].items():
                 obj = command.model_object
                 task = custom_tasks[obj.task]
-                embed.add_field(name=command_str, value=task.format_string.format(*obj.get_args()), inline=False)
+                embed.add_field(name=command_str, value=task.get_format_string(*obj.get_args()), inline=False)
             embed.set_image(url=FORCE_FULL_WIDTH_IMAGE_URL)
             await msg.channel.send(embed=embed)
 
@@ -106,7 +110,7 @@ class CommandCustomCommand(Command):
         if args.mode in ['edit', 'e', '수정']:
             return
 
-        if args.mode in ['delete', 'remove', 'd', 'r', 'rm', '삭제']:
+        if args.mode in ['delete', 'remove', 'd', 'del', 'r', 'rm', '삭제']:
             if not args.command_to_remove:
                 return ECommandExecuteResult.SYNTAX_ERROR
 

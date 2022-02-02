@@ -20,7 +20,8 @@ class CustomCommand(Command):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         try:
             return await custom_tasks[self.model_object.task].execute(self.model_object.get_args(),
-                                                                      args.extra_args, msg.channel)
+                                                                      args.extra_args, msg.channel, **kwargs,
+                                                                      command_str=self.get_command_str())
         except NotEnoughUserArgumentException:
             raise CommandExecuteError("명령어를 실행하기 위한 인자가 부족해요!", delete_after=2)
 

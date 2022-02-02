@@ -8,17 +8,19 @@ from logger import log_schedule
 
 class Scheduler:
     class Schedule:
-        def __init__(self, func, name: str, every: timedelta, *args, **kwargs):
+        def __init__(self, func, name: str, every: timedelta, count: int, *args, **kwargs):
             self.func = func
             self.name: str = name
             self.every: timedelta = every
+            self.count = count
 
             self.args = args
             self.kwargs = kwargs
 
             self.next_execute_timestamp: datetime = datetime.now()
+            self.should_abort = False
 
-        async def execute(self) -> bool:
+        async def execute(self) -> None:
             log_schedule(self.name, self.next_execute_timestamp)
 
             if inspect.iscoroutinefunction(self.func):
@@ -26,33 +28,41 @@ class Scheduler:
             else:
                 self.func(*self.args, **self.kwargs)
 
+            self.count -= 1
+            if self.count == 0:  # making negative count values loop forever
+                self.abort()
+
             if self.every == timedelta.min:
                 self.next_execute_timestamp = datetime.max
-                return False
+                self.abort()
             else:
                 self.next_execute_timestamp = datetime.now() + self.every
-                return True
 
         def abort(self) -> None:
-            del Scheduler.schedules[self.name]
+            self.should_abort = True
 
     schedules: Dict[str, Schedule] = {}
 
     @staticmethod
-    def schedule(func, name: str, start_at: datetime, every: timedelta = timedelta.min, *args, **kwargs):
-        new_schedule = Scheduler.Schedule(func, name, every, *args, **kwargs)
+    def schedule(func, name: str, start_at: datetime, every: timedelta = timedelta.min, count: int = -1,
+                 *args, **kwargs):
+        new_schedule = Scheduler.Schedule(func, name, every, count, *args, **kwargs)
         new_schedule.next_execute_timestamp = start_at
         Scheduler.schedules[name] = new_schedule
 
     @staticmethod
     async def update():
+        to_execute = []
         to_remove = []
 
         now: datetime = datetime.now()
         for name, schedule in Scheduler.schedules.items():
-            if schedule.next_execute_timestamp <= now:
-                if not await schedule.execute():
-                    to_remove.append(name)
+            if schedule.should_abort:
+                to_remove.append(name)
+            elif schedule.next_execute_timestamp <= now:
+                to_execute.append(schedule.execute())
+
+        await asyncio.gather(*to_execute)
 
         for name in to_remove:
             del Scheduler.schedules[name]

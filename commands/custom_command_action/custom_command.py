@@ -2,7 +2,7 @@ from ..command import *
 
 from nextcord import Message
 
-from .custom_task import custom_tasks, NotEnoughUserArgumentException
+from .custom_task import custom_tasks, NotEnoughUserArgumentException, ArgumentParseException
 
 
 class CustomCommand(Command):
@@ -24,6 +24,9 @@ class CustomCommand(Command):
                                                                       command_str=self.get_command_str())
         except NotEnoughUserArgumentException:
             raise CommandExecuteError("명령어를 실행하기 위한 인자가 부족해요!", delete_after=2)
+
+        except ArgumentParseException:
+            raise CommandExecuteError("잘못된 인자입니다!", delete_after=2)
 
     @staticmethod
     def load():

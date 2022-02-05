@@ -43,7 +43,7 @@ class TaskConfirmButton(Button):
 
 class CommandCustomCommand(Command):
     """
-    [create|edit|remove <command_to_remove>]
+    [create|remove <command_to_remove>]
     서버 명령어 조회/관리
     이 서버만의 명령어를 조회/생성/수정/삭제합니다. 인자가 없으면 조회합니다.
     """
@@ -58,7 +58,7 @@ class CommandCustomCommand(Command):
         return ["com", 'servercommand', '명령어', '서버명령어']
 
     def fill_arg_parser(self, parser: argparse.ArgumentParser):
-        parser.add_argument('mode', nargs='?', choices=['create', 'c', '생성', '만들기', 'edit', 'e', '수정',
+        parser.add_argument('mode', nargs='?', choices=['create', 'c', '생성', '만들기',
                                                         'delete', 'remove', 'd', 'del', 'r', 'rm', '삭제'])
         parser.add_argument('command_to_remove', nargs='?')
 
@@ -106,9 +106,6 @@ class CommandCustomCommand(Command):
             button = TaskConfirmButton(kwargs['bot'], msg.author, msg.channel, command)
             view.add_item(button)
             await msg.channel.send('`' + command + "` 명령어가 할 작업을 선택하세요", view=view)
-
-        if args.mode in ['edit', 'e', '수정']:
-            return
 
         if args.mode in ['delete', 'remove', 'd', 'del', 'r', 'rm', '삭제']:
             if not args.command_to_remove:

@@ -4,11 +4,19 @@ from django.core.wsgi import get_wsgi_application
 from nextcord import Game
 
 from actions.action_dispatcher import Action, execute_action, actions
-from commands.custom_command_action.custom_command import CustomCommand
+from commands.custom_command_action.custom_command import CustomCommand, guild_custom_commands
 from commands.command_dispatcher import commands_map, alias_map, execute_command
 from schedules.initial_schedules import schedule_initial, Scheduler
 from emoji_container import *
 from helper_functions import *
+
+
+common_kwargs = {
+    'commands_map': commands_map,
+    'actions': actions,
+    'alias_map': alias_map,
+    'guild_custom_commands': guild_custom_commands
+}
 
 
 def dispatch_action():
@@ -16,8 +24,7 @@ def dispatch_action():
         async def _wrapper(self, *args, **kwargs):
             await func(self, *args, **kwargs)
             await execute_action(func.__qualname__.split('.')[1], *args, **kwargs,
-                                 main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
-                                 alias_map=alias_map)
+                                 main_global=globals(), bot=self, **common_kwargs)
         return _wrapper
     return wrapper
 
@@ -31,8 +38,7 @@ class DiscordBot(nextcord.Client):
         def default_func(func_name):
             async def inner(this, *args, **kwargs):
                 await execute_action(func_name, *args, **kwargs,
-                                     main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
-                                     alias_map=alias_map)
+                                     main_global=globals(), bot=self, **common_kwargs)
             return inner
 
         for event in Action.EVENTS:
@@ -54,8 +60,7 @@ class DiscordBot(nextcord.Client):
 
         await self.fetch_guilds().flatten()
 
-        schedule_initial(main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
-                         alias_map=alias_map)
+        schedule_initial(main_global=globals(), bot=self, **common_kwargs)
         CustomCommand.load()
 
         print("Ready!")
@@ -68,8 +73,7 @@ class DiscordBot(nextcord.Client):
         if msg.content.startswith(COMMAND_PREFIX) and msg.content.count(COMMAND_PREFIX) == 1:
             split_content = msg.content.split(' ')
             await execute_command(msg, split_content[0][len(COMMAND_PREFIX):].lower(), split_content[1:],
-                                  main_global=globals(), bot=self, commands_map=commands_map, actions=actions,
-                                  alias_map=alias_map)
+                                  main_global=globals(), bot=self, **common_kwargs)
             return
 
 

@@ -62,7 +62,7 @@ class Scheduler:
             elif schedule.next_execute_timestamp <= now:
                 to_execute.append(schedule.execute())
 
-        await asyncio.gather(*to_execute)
+        await asyncio.gather(*to_execute, return_exceptions=True)
 
         for name in to_remove:
             del Scheduler.schedules[name]

@@ -28,6 +28,10 @@ class NoChannelException(Exception):
     pass
 
 
+class ArgumentParseException(Exception):
+    pass
+
+
 class CustomTask(metaclass=ABCMeta):
     def __init__(self, task_name: str, task_desc: str, *arguments: CustomTaskArgument):
         self.task_name: str = task_name
@@ -73,12 +77,16 @@ class CustomTask(metaclass=ABCMeta):
     async def execute(self, stored_args: Tuple[str, ...], user_args: Tuple[str, ...], channel: Optional[TextChannel],
                       **kwargs):
         args = []
-        for arg in stored_args:
+        for i, arg in enumerate(stored_args):
             result = re.search(r'^arg(\d+)$', arg)
             if result:
                 index = int(result[1])
                 if len(user_args) < index + 1:
                     raise NotEnoughUserArgumentException
+                try:  # check parse error
+                    self.arguments[i].parse(user_args[index])
+                except:
+                    raise ArgumentParseException
                 args.append(user_args[index])
             elif arg == 'channel':
                 if not channel:
@@ -87,11 +95,11 @@ class CustomTask(metaclass=ABCMeta):
             else:
                 args.append(arg)
 
-        def arg_parser(i: int, argument: CustomTaskArgument):
+        def arg_parser(j: int, argument: CustomTaskArgument):
             if argument.type == ECustomTaskArgumentType.TASK:
-                return argument.parse(*args[i:], custom_tasks=custom_tasks)
+                return argument.parse(*args[j:], custom_tasks=custom_tasks)
             else:
-                return argument.parse(args[i]),
+                return argument.parse(args[j]),
         return await self.execute_inner(*chain(*[arg_parser(x, y) for x, y in enumerate(self.arguments)]), **kwargs)
 
     @abstractmethod
@@ -171,7 +179,7 @@ class CustomTaskToggleMute(CustomTask):
         return ECustomTaskArgumentType.CHANNEL, ECustomTaskArgumentType.USER
 
     def get_format_string(self, *args) -> str:
-        return '{1} 유저의 마이크 음소거를 토글'.format(*args)
+        return '<@{1}> 유저의 마이크 음소거를 토글'.format(*args)
 
     async def execute_inner(self, *args, **kwargs):
         channel, user_id = args
@@ -190,7 +198,7 @@ class CustomTaskToggleDeaf(CustomTask):
         return ECustomTaskArgumentType.CHANNEL, ECustomTaskArgumentType.USER
 
     def get_format_string(self, *args) -> str:
-        return '{1} 유저의 헤드셋 음소거를 토글'.format(*args)
+        return '<@{1}> 유저의 헤드셋 음소거를 토글'.format(*args)
 
     async def execute_inner(self, *args, **kwargs):
         channel, user_id = args

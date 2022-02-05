@@ -1,6 +1,7 @@
 from commands.command import *
 
 from helper_functions import *
+from .custom_command_action.custom_task import custom_tasks
 
 
 class CommandHelp(Command):
@@ -37,12 +38,26 @@ class CommandHelp(Command):
     async def execute(self, msg: Message, args: argparse.Namespace, **kwargs):
         commands_map = kwargs['commands_map']
         if args.command:
+            guild_custom_commands = kwargs['guild_custom_commands']
+            custom_commands = guild_custom_commands.get(msg.guild.id if msg.guild else 0, {})
+            if args.command in custom_commands:
+                target_command = custom_commands[args.command]
+
+                embed = get_embed(args.command, '이 서버의 커스텀 명령어')
+                obj = target_command.model_object
+                task = custom_tasks[obj.task]
+                embed.add_field(name=args.command, value=task.get_format_string(*obj.get_args()), inline=False)
+                embed.set_image(url=FORCE_FULL_WIDTH_IMAGE_URL)
+                await msg.channel.send(embed=embed)
+
+                return
+
             target_command = commands_map.get(args.command, None)
             if not target_command:
                 target_command = commands_map.get(kwargs['alias_map'].get(args.command, None), None)
 
             if not target_command:
-                raise CommandExecuteError(mention_user(msg.author), "존재하지 않는 명령어입니다!", delete_after=1)
+                raise CommandExecuteError("존재하지 않는 명령어입니다!", delete_after=1)
 
             doc = target_command.__doc__
 

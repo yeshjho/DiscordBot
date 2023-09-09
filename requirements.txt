@@ -1,7 +1,7 @@
 asyncmock
 beautifulsoup4
 Django
-django-pyodbc-azure
 nextcord
 Pillow
 requests
+mysqlclient
